@@ -6,6 +6,28 @@
 
 [项目主页](https://www.ipsyonline.xyz/living-apps/index.zh-CN.html) · [下载](https://github.com/Jayden-Lin97/living-apps/releases) · [观看宣传片](https://www.ipsyonline.xyz/living-apps/index.zh-CN.html#demo) · [问题反馈](https://github.com/Jayden-Lin97/living-apps/issues)
 
+## 愿景：重新定义下一代 App
+
+**让使用者能够决定应用的功能、交互方式与演进方向。**
+
+我们希望 Living Apps 成为 Android 上的个人应用层：在同一个空间里，把一个想法变成应用，为已经使用的应用设计新的操作界面，并让这些体验随着日常使用持续调整。通过自然语言和直接交互，让没有编程经验的人也能参与应用的创建与改变。
+
+在这个愿景里，应用与使用者保持持续的关系：界面可以改变，有用的数据能够保留，改进可以被提出、试用和恢复。Agent 帮助完成这个过程，使用者掌握方向和授权。个性化涵盖行为与交互，也涵盖外观。
+
+0.3.0 是这一方向的初步实现，包含有限范围的个人应用创建、已有应用界面重构，以及本地规则驱动的改进。更丰富的应用类型和更广的兼容范围仍是后续目标。
+
+## 创新点
+
+| 设计重点 | 对使用者的价值 | 当前实现 |
+|---|---|---|
+| 把应用表达为可编辑的描述 | 创建与后续修改采用同一套可理解的编辑过程 | 自然语言与原生控件修改受约束的 AppSpec 数据，由 Android 母应用解释运行 |
+| 在已有应用之上提供个人界面 | 使用者可以选择操作方式，原应用继续完成实际业务 | RebuildSpec 将选取的页面信息、动态列表和固定动作绑定到原生覆盖界面，逐功能检查兼容 |
+| 观察—建议—试用—采用—恢复的持续生命周期 | 应用在首次创建后仍能根据使用情况调整 | 本地事件与规则提出建议；可选自动采用目前仅允许为记录类应用增加快速记录入口 |
+| 将界面版本与业务记录分开 | 尝试和恢复界面变化时，能够保留已有记录 | 稳定字段 ID、持久草稿、隔离试用记录、版本基线检查和版本恢复；数据转换另有独立校验流程 |
+| 可复用的本机运行引擎 | 不同个人界面共用运行机制与适配格式 | 原生组件、语义控件定位、有限固定流程及本地校验；AI API 辅助创建与编辑，无需处理每一次点击 |
+
+这些机制串起完整过程：创建体验、实际使用、持续调整，并掌握改变的边界。已有应用重构当前依靠用户选取和示范建立适配，不能自动理解所有应用。该模式的 AI 编辑仅调整外观及已有组件的顺序和文案，不能发明设备操作。
+
 ## 可以做什么
 
 - 从离线模板开始，或向可配置的 AI API 描述应用。
@@ -24,13 +46,54 @@
 
 修改先进入本机草稿，检查后再保存，试用记录与正式记录分开。恢复 UI 版本保留业务记录；数据转换使用独立演算、校验备份和事务。
 
-## 本地优先架构
+## 技术架构
+
+Living Apps 基于 Android 8.0+、原生 Java 与 Android Views。两种描述格式共用母应用入口，同时保留独立的执行和存储边界：
+
+```mermaid
+flowchart TB
+  User["使用者：描述、点选、编辑与试用"]
+  API["用户配置的远端 LLM API · store:false"]
+  Source["已安装的原应用 · 同一台手机"]
+  subgraph Host["Living Apps · 手机本地"]
+    UI["原生创建与编辑工作区"]
+    Check["描述、兼容性与版本基线检查"]
+    App["AppSpec · 个人应用描述"]
+    Runtime["原生表单、记录与统计"]
+    Data[("SQLite 业务记录")]
+    Rebuild["RebuildSpec · 界面绑定与固定步骤"]
+    Bridge["原生覆盖界面与无障碍桥接"]
+    History[("本地草稿与描述版本")]
+    Observe["本地观察与允许列表规则"]
+    UI --> Check
+    Check --> App --> Runtime
+    Runtime <--> Data
+    Check --> Rebuild --> Bridge
+    Check <--> History
+    Runtime --> Observe --> Check
+  end
+  User --> UI
+  UI -. "用户主动发起 AI 请求" .-> API
+  API -. "候选描述或外观" .-> Check
+  Bridge <-->|"选定页面与用户触发的动作"| Source
+```
+
+| 部分 | 职责与边界 |
+|---|---|
+| 个人应用运行层 | [AppSpec](app/src/main/java/dev/livingapps/core/AppSpec.java)、原生界面与 [Store](app/src/main/java/dev/livingapps/Store.java) 处理表单、记录、统计、草稿和版本；调整布局不删除业务记录 |
+| 已有应用重构层 | [RebuildSpec](app/src/main/java/dev/livingapps/core/RebuildSpec.java)、[RebuildStore](app/src/main/java/dev/livingapps/RebuildStore.java) 与[无障碍服务](app/src/main/java/dev/livingapps/RebuildAccessibilityService.java) 处理界面绑定和固定操作；原应用保留账号及业务数据，版本/签名检查与重复定位拒绝约束执行 |
+| 观察与演进层 | [ReflectionEngine](app/src/main/java/dev/livingapps/core/ReflectionEngine.java)、版本策略及 Android JobScheduler 为记录类应用实现本地聚合、有限建议和自动调整；重构模式不运行自主跨应用规划器 |
+| AI 辅助层 | [ResponsesClient](app/src/main/java/dev/livingapps/ResponsesClient.java) 调用用户配置的 API；响应先作为候选，通过本地校验及相应采用流程后生效，不执行任意生成代码 |
+
+### 计算与数据放在哪里
 
 | 手机本地 | 用户配置的远端 API |
 |---|---|
 | 原生 UI、已安装应用绑定 / 覆盖界面 / 固定流程、SQLite 记录、统计、搜索、草稿、撤销 / 合并、试用、固定动作、数据转换 / 备份、版本、兼容校验、观察、规则与调度 | 自然语言创建 / 编辑、用户主动发起的深度分析 |
 
 无需自建业务后台或手机本地大模型。请求包含 `store:false`，不自动上传业务记录；Key 经 Android Keystore 保护，不进入 APK 或备份。HTTP 仅允许本机开发地址，远端 API 使用可信的 HTTPS 服务。
+
+关联原应用的联网功能仍遵循原应用的网络要求，重构不会把其页面变成可任意后台调用的 API。实现细节见[架构与计算部署](docs/DEVELOPMENT_PLAN.zh-CN.md)、[AppSpec](docs/SCHEMA.zh-CN.md)及[重构能力边界](docs/REBUILD_MODE.zh-CN.md)。
 
 ## 文档
 
@@ -39,6 +102,7 @@
 - [应用编辑交互方案](docs/APP_EDITING_INTERACTION.zh-CN.md)
 - [架构与计算部署](docs/DEVELOPMENT_PLAN.zh-CN.md)
 - [AppSpec 与数据兼容](docs/SCHEMA.zh-CN.md)
+- [重构已有应用](docs/REBUILD_MODE.zh-CN.md)
 - [开源许可与参考](docs/OPEN_SOURCE_REVIEW.zh-CN.md)
 - [验证与设备测试边界](docs/VALIDATION.zh-CN.md)
 - [路线](docs/ROADMAP.zh-CN.md)
