@@ -16,7 +16,7 @@ In this vision, an app has a continuing relationship with its user: its interfac
 
 Version 0.3.0 is an initial implementation of this direction: bounded personal-app creation, installed-app interface reconstruction and local rule-based improvement. Richer app categories and broader compatibility remain development goals.
 
-## Design innovations
+## What makes Living different
 
 | Design choice | Value for the user | Current implementation |
 |---|---|---|
