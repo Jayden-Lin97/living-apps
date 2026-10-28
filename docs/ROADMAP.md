@@ -38,3 +38,7 @@ Design an optional server only for concrete requirements such as encrypted cross
 2. Record versions, licenses, maintenance and actual runnability; distinguish marketing, prototypes and implementations.
 3. Run a minimal integration check, comparing local execution, power use, package size and introduced server dependencies.
 4. Update OPEN_SOURCE_REVIEW.md, the computation deployment table and the validation report.
+
+## Installed-app reconstruction
+
+Implemented in the development build: common launcher-app selection, per-source authorization, semantic information/list bindings, bounded user-triggered workflows, native overlay, local version/trial management and optional API appearance editing. Remaining: real QQ Music/OEM-device acceptance, richer navigation adapters, definition export/import and broader compatibility coverage. Automatic exploration, OCR and arbitrary autonomous cross-app operations are not implemented. See [Rebuild mode](REBUILD_MODE.md).

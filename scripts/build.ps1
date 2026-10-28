@@ -24,6 +24,6 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Gradle failed: $LASTEXITCODE" }
     $taskDist = Join-Path $taskRoot 'dist'
     New-Item -ItemType Directory -Path $taskDist -Force | Out-Null
-    Copy-Item -LiteralPath (Join-Path $env:LIVING_APPS_BUILD_ROOT 'app\outputs\apk\debug\app-debug.apk') -Destination (Join-Path $taskDist 'living-apps-0.2.0-debug.apk') -Force
-    Get-FileHash -LiteralPath (Join-Path $taskDist 'living-apps-0.2.0-debug.apk') -Algorithm SHA256 | Select-Object Hash,Path
+    Copy-Item -LiteralPath (Join-Path $env:LIVING_APPS_BUILD_ROOT 'app\outputs\apk\debug\app-debug.apk') -Destination (Join-Path $taskDist 'living-apps-0.3.0-debug.apk') -Force
+    Get-FileHash -LiteralPath (Join-Path $taskDist 'living-apps-0.3.0-debug.apk') -Algorithm SHA256 | Select-Object Hash,Path
 } finally { Pop-Location }

@@ -2,7 +2,7 @@
 
 **English** | [简体中文](DEVELOPMENT_PLAN.zh-CN.md)
 
-Updated 2026-10-28. Version 0.2.0 implements the native app-editing workspace; device acceptance remains separately tracked.
+Updated 2026-10-29. Version 0.3.0 adds installed-app reconstruction alongside the native app-editing workspace; device acceptance remains separately tracked.
 
 ## Product scope
 
@@ -93,3 +93,18 @@ See [VALIDATION.md](VALIDATION.md) for evidence and gaps. Android periodic work 
 ## Known boundaries
 
 The app ships without a private API endpoint. Configure your own trusted HTTPS address and credentials before using AI. HTTP is restricted to loopback and Android-emulator development hosts. Ordinary use, records, editing and rules do not require a model connection.
+
+## Installed-app reconstruction (2026-10-29)
+
+A second standard mode is implemented by RebuildActivity, RebuildSpec/RebuildLayout, RebuildStore and RebuildAccessibilityService. Its definitions and operation boundary are separate from AppSpec and business records. The earlier exclusion of third-party connections applies to direct service integrations; this mode operates the installed client through user-granted Android capabilities.
+
+| Additional computation | Placement | Boundary |
+|---|---|---|
+| Launcher discovery and source signature/version checks | Phone PackageManager | No blanket package-list permission or remote inventory |
+| Semantic tree, lists, source-page matching and overlay | Phone accessibility service | Active authorized source only; no screenshots or uploads; bounded traversal |
+| Fixed click/input/scroll workflows | Phone main thread | User-triggered; unique selectors, page baseline, bounded waiting; stopping cancels remaining steps |
+| Definitions, history, trial status and revision checks | Phone private SQLite | Separate from records/source database; edits/restores invalidate confirmations |
+| Optional appearance generation | Existing configurable Responses API | User requirement plus anonymous aliases/types only; no selectors, source-page contents or invented operations; preview before adoption |
+| New business server | None | Not needed for this mode |
+
+See [setup and limitations](REBUILD_MODE.md). The runtime is implemented; real cross-app/OEM compatibility remains device acceptance, not inferred from host tests.

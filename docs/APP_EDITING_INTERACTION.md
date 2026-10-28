@@ -219,3 +219,7 @@ These are the original acceptance goals. Executed 0.2.0 core, framework, SQLite 
 The design-stage web prototype uses preset examples, without models or personal data. The Android implementation is EditorActivity, independently validated for storage, framework and live API behavior; the web prototype is not the APK.
 
 At design time Chromium checks covered prototype rename, undo/redo, scope confirmation, isolated trial, saving, conversation entry, cancellation, fixed send-time selection, stale-result rejection and narrow/dark views. These verify prototype interactions, not Android, model or real-storage acceptance.
+
+## A second creation mode: reconstruct an installed app
+
+The home screen now offers creation from scratch and reconstruction of an installed app. Reconstruction uses source-page selection and demonstration rather than record-field editing: choose source → explicit authorization → select text/lists/operations → arrange appearance → try on device → confirm the result. Fixed workflows, compatibility states and restoration are documented in [Rebuild mode](REBUILD_MODE.md). The existing record editor remains independent.

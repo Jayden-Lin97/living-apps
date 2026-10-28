@@ -56,3 +56,13 @@ The project's MigrationPlan implements three fixed conversions: constrained type
 ## Public distribution boundary
 
 An explicit allowlist limits source archives to Android product code, required build files, third-party licenses and user/developer documentation. Links and archive entries are checked offline before publication. Deployment configuration, internal publication records, private endpoints and credentials are outside the public source distribution. No Android dependency or business server is added.
+
+## Reconstructing installed apps (2026-10-29)
+
+| Project | Exact source / license verified | Decision and reason |
+|---|---|---|
+| [Mobilerun Portal](https://github.com/droidrun/mobilerun-portal/tree/94ecc89d02ac86f08076d7d354b612d3dd54541f) | Commit `94ecc89d02ac86f08076d7d354b612d3dd54541f`; [AGPL-3.0-or-later](https://github.com/droidrun/mobilerun-portal/blob/94ecc89d02ac86f08076d7d354b612d3dd54541f/LICENSE) | Reference only: accessibility-tree inspection demonstrates a common bridge across apps. No code incorporated; avoid the separate portal, remote-control endpoint and broader copyleft dependency in the current APK. |
+| [Appium UiAutomator2 server](https://github.com/appium/appium-uiautomator2-server/tree/56bf27a222b9aa242e6a40cf87825b78b443b7be) | Commit `56bf27a222b9aa242e6a40cf87825b78b443b7be`; [Apache-2.0](https://github.com/appium/appium-uiautomator2-server/blob/56bf27a222b9aa242e6a40cf87825b78b443b7be/LICENSE) | Evaluated, not embedded: intended for instrumentation/test automation, with an external driver. A personal on-device interface must work without ADB, a test runner or a business server. |
+| Android platform accessibility | Existing SDK API, component-specific AOSP licenses; no source copied | Use AccessibilityService, node actions and TYPE_ACCESSIBILITY_OVERLAY directly. No added production dependency or server. Only unique semantic selectors and explicit bounded workflows; no coordinate automation, screenshot upload or arbitrary generated code. |
+
+The bridge is authored in this project. Source-app version/signature checks, local per-component trial confirmation, opt-in package access, definition revision checks and safe exit are independent of model output. Ordinary tests remain offline. The API can only rename/reorder existing anonymous component aliases and change appearance after preview; it cannot invent device operations. Google Play accessibility declarations and the distinction between deterministic automation and autonomous action must be reviewed before distribution to that store.

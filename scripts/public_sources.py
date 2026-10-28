@@ -2,7 +2,7 @@
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
-PUBLIC_DOC_NAMES=('APP_EDITING_INTERACTION','DEVELOPMENT_PLAN','OPEN_SOURCE_REVIEW','ROADMAP','SCHEMA','UI_DESIGN','USER_GUIDE','VALIDATION')
+PUBLIC_DOC_NAMES=('APP_EDITING_INTERACTION','DEVELOPMENT_PLAN','OPEN_SOURCE_REVIEW','ROADMAP','SCHEMA','UI_DESIGN','USER_GUIDE','VALIDATION','REBUILD_MODE')
 ROOT_FILES=('.gitignore','.gitattributes','AGENTS.md','AGENTS.zh-CN.md','README.md','README.zh-CN.md','CONTRIBUTING.md','CONTRIBUTING.zh-CN.md','SECURITY.md','SECURITY.zh-CN.md','settings.gradle','build.gradle','gradle.properties','gradlew','gradlew.bat','LICENSE')
 PUBLIC_SCRIPTS=('build.ps1','audit_artifact.py','package_delivery.py','import_lucide.py','probe_api.py','check_i18n.py','public_sources.py')
 

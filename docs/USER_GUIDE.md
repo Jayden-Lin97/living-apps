@@ -1,10 +1,10 @@
-# Using Living Apps 0.2.0
+# Using Living Apps 0.3.0
 
 **English** | [简体中文](USER_GUIDE.zh-CN.md)
 
 ## Install and start
 
-Install `dist/living-apps-0.2.0-debug.apk`, requiring Android 8.0 or later. This development-signed validation build is not in an app store. Installing over an older version with the same signature preserves apps and records; the database upgrades automatically.
+Install `dist/living-apps-0.3.0-debug.apk`, requiring Android 8.0 or later. This development-signed validation build is not in an app store. Installing over an older version with the same signature preserves apps and records; the database upgrades automatically.
 
 First launch offers offline spending, water and reading templates with no fabricated records. Open one to add records; tap a record to edit or delete it. Statistics run on the phone. The pencil opens editing, and the history icon opens versions. The current Android interface is in Chinese; the website and documentation have separate English and Chinese editions.
 
@@ -61,3 +61,7 @@ AI deeper analysis is initiated by the user and includes only the definition and
 Settings exports plaintext JSON containing current app definitions, records and frozen status, excluding keys, events, historical versions, drafts, trial data and pre-conversion backups. To export pre-conversion data, first create its app copy, then export a global backup. Choose a trusted save location.
 
 Import creates independent app copies rather than overwriting existing apps. Limits are 5 MB, 50 apps, 5,000 records per app and 20,000 total records. Invalid input rolls back the entire import.
+
+## Reconstruct an existing app
+
+Use the new **重构已有应用** home entry. The source app keeps its account/business data; Living stores its own UI bindings and bounded workflows locally. See the [full setup, authorization and trial guide](REBUILD_MODE.md). The record-app global backup described above excludes reconstructed interfaces.

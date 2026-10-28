@@ -14,7 +14,9 @@ Create your own apps and let them evolve with use. Living Apps is a local-first 
 - Run forms, records, lists, check-ins and basic statistics locally. Group/hide fields, configure preset record actions and use a separate verified data-conversion flow.
 - Let local rules suggest improvements. Automatic adoption is off by default and currently limited to adding quick entry, with permission, freezing, cooldown and restoration.
 
-Version 0.2.0 is a development preview for Android 8.0+. Free-form layouts, arbitrary generated code, network actions and general workflows are not supported. The current Android UI is Chinese; public documentation is available in English and Chinese.
+Version 0.3.0 adds [Reconstruct an existing app](docs/REBUILD_MODE.md): select an installed app, bind current-page information, dynamic lists and explicit fixed operations, then design and locally try your own interface. This is a common engine, not universal compatibility; real QQ Music acceptance is still pending.
+
+Version 0.3.0 is a development preview for Android 8.0+. Free-form layouts, arbitrary generated code, arbitrary network actions and general workflows are not supported. Installed-app reconstruction has a separate, bounded operation schema. The current Android UI is Chinese; public documentation is available in English and Chinese.
 
 ## Get started
 
@@ -26,7 +28,7 @@ Edits remain in a local draft until you review and save. Trial records stay sepa
 
 | On your phone | Configured remote API |
 |---|---|
-| Native UI, SQLite records, statistics, search, drafts, undo/merge, trials, preset actions, data conversion/backups, versions, compatibility, observation, rules and scheduling | Natural-language creation/editing and user-requested deeper analysis |
+| Native UI, installed-app bindings/overlays/workflows, SQLite records, statistics, search, drafts, undo/merge, trials, preset actions, data conversion/backups, versions, compatibility, observation, rules and scheduling | Natural-language creation/editing and user-requested deeper analysis |
 
 No dedicated business backend or on-device large model is required. API requests include `store:false` and do not automatically upload business records. Keys use Android Keystore and are excluded from APKs and backups. HTTP is permitted only for local development hosts; use a trusted HTTPS service for remote APIs.
 

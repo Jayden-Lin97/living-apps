@@ -38,7 +38,7 @@ public final class MainActivity extends Activity {
   private Future<?> request;
   private AlertDialog loading;
   private int requestToken;
-  private static final int EXPORT = 71, IMPORT = 72, EDIT = 73;
+  private static final int EXPORT = 71, IMPORT = 72, EDIT = 73, REBUILD = 74;
   private static final String DEFAULT_BASE = "";
 
   @Override
@@ -254,6 +254,10 @@ public final class MainActivity extends Activity {
   private void home() {
     currentApp = null;
     List<Store.App> apps = store.apps();
+    List<RebuildStore.Entry> rebuiltApps;
+    try (RebuildStore rebuilds = new RebuildStore(this)) {
+      rebuiltApps = rebuilds.all();
+    }
     boolean compactDisplay =
         getResources().getConfiguration().screenWidthDp < 360
             || getResources().getConfiguration().fontScale > 1.2f;
@@ -261,7 +265,8 @@ public final class MainActivity extends Activity {
     ui.space(b, 10);
     LinearLayout heading = ui.row();
     heading.addView(ui.text("我的应用", 29, Ui.INK, true), new LinearLayout.LayoutParams(0, -2, 1));
-    heading.addView(ui.tag(String.format(Locale.ROOT, "%02d", apps.size()) + " 个应用"));
+    heading.addView(
+        ui.tag(String.format(Locale.ROOT, "%02d", apps.size() + rebuiltApps.size()) + " 个应用"));
     b.addView(heading);
     ui.space(b, 8);
     b.addView(ui.body("创建属于自己的应用，让它持续适应你的需求。"));
@@ -289,6 +294,8 @@ public final class MainActivity extends Activity {
     Button create = ui.action("创造一个应用", "plus", false, () -> editor(null, null, false));
     create.setBackground(ui.shape(Ui.LIME, 14, false));
     hero.addView(create);
+    ui.space(hero, 10);
+    hero.addView(ui.action("重构已有应用", "layout-grid", false, () -> openRebuild(null)));
     b.addView(hero);
     LinearLayout status = ui.row();
     status.setPadding(ui.dp(2), ui.dp(2), 0, ui.dp(18));
@@ -296,6 +303,16 @@ public final class MainActivity extends Activity {
     ui.gap(status, 6);
     status.addView(ui.text("你的记录，只留在这台手机", 11, Ui.MUTED, false));
     b.addView(status);
+    for (RebuildStore.Entry rebuilt : rebuiltApps) {
+      LinearLayout rebuiltCard = ui.card();
+      rebuiltCard.addView(
+          ui.actionRow(
+              "layout-grid",
+              rebuilt.spec.name(),
+              "重构已有应用 · " + rebuilt.spec.widgets().length() + " 个组件 · 按功能验证",
+              () -> openRebuild(rebuilt.id)));
+      b.addView(rebuiltCard);
+    }
     if (apps.isEmpty()) b.addView(ui.empty("layout-grid", "从第一个应用开始", "从一个想法开始，或选择下方的离线模板。"));
     int columns =
         getResources().getConfiguration().screenWidthDp < 360
@@ -337,8 +354,7 @@ public final class MainActivity extends Activity {
     if (!proposals.isEmpty()) {
       LinearLayout nudge = ui.card();
       nudge.addView(
-          ui.actionRow(
-              "sprout", proposals.size() + " 个应用改进建议", "来自你的使用习惯，点开看看", this::insights));
+          ui.actionRow("sprout", proposals.size() + " 个应用改进建议", "来自你的使用习惯，点开看看", this::insights));
       b.addView(nudge);
     }
     section(b, "从灵感开始", "这三个模板，断网也能直接用。");
@@ -380,6 +396,10 @@ public final class MainActivity extends Activity {
     card.addView(ui.text(store.records(app.id).size() + " 条记录", 11, color, true));
     ui.touch(card, 22, () -> showApp(app.id, app.spec.startScreen(), true));
     return card;
+  }
+
+  private void openRebuild(String id) {
+    startActivityForResult(new Intent(this, RebuildActivity.class).putExtra("shell", id), REBUILD);
   }
 
   private void showApp(String id, String target, boolean logOpen) {
@@ -1375,7 +1395,7 @@ public final class MainActivity extends Activity {
     adaptation.addView(automatic);
     adaptation.addView(ui.body("首版只自动增加快速记录入口，每个应用 24 小时内最多一次。其他修改仍先预览；每个应用可单独固定版本。"));
     b.addView(adaptation);
-    section(b, "数据与备份", "备份包含当前应用定义和业务记录；不包含密钥、使用事件和版本历史。");
+    section(b, "数据与备份", "备份包含记录类应用定义和业务记录；不包含重构界面、密钥、使用事件和版本历史。");
     LinearLayout backup = ui.card();
     backup.addView(
         ui.action(
@@ -1505,6 +1525,10 @@ public final class MainActivity extends Activity {
   @Override
   protected void onActivityResult(int code, int result, Intent data) {
     super.onActivityResult(code, result, data);
+    if (code == REBUILD) {
+      home();
+      return;
+    }
     if (code == EDIT) {
       try {
         String id = data == null ? currentApp : data.getStringExtra("appId");

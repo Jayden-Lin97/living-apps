@@ -26,14 +26,14 @@ git=subprocess.run(['git','ls-files','-z'],cwd=ROOT,capture_output=True)
 if git.returncode==0:
     for name in git.stdout.decode().split('\0'):
         if name and not is_public_path(name):issues.append({'file':name,'findings':['outside public allowlist']})
-apk=ROOT/'dist/living-apps-0.2.0-debug.apk'
+apk=ROOT/'dist/living-apps-0.3.0-debug.apk'
 with zipfile.ZipFile(apk) as archive:
     entries=archive.namelist()
     assert 'AndroidManifest.xml' in entries and 'classes.dex' in entries
     assert not any('live-generated' in n or 'live-edited' in n or 'api-key' in n.lower() for n in entries),'Private or test files in APK'
     for name in entries:
         audit('APK:'+name,archive.read(name))
-source=ROOT/'dist/living-apps-0.2.0-source.zip'
+source=ROOT/'dist/living-apps-0.3.0-source.zip'
 if source.exists():
     with zipfile.ZipFile(source) as archive:
         expected={'living-apps/'+p.relative_to(ROOT).as_posix():p for p in public_files()}

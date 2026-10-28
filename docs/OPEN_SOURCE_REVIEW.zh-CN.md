@@ -56,3 +56,13 @@
 ## 公开交付边界
 
 公开源码包使用显式允许列表，仅包含 Android 产品源码、构建所需文件、第三方许可及用户 / 开发文档。文档链接和归档文件在发布前离线检查；部署配置、内部发布记录、私人地址与凭据不属于公开源码。没有新增 Android 依赖或业务服务器。
+
+## 重构已安装应用（2026-10-29）
+
+| 项目 | 核验的确切源码 / 许可证 | 结论及理由 |
+|---|---|---|
+| [Mobilerun Portal](https://github.com/droidrun/mobilerun-portal/tree/94ecc89d02ac86f08076d7d354b612d3dd54541f) | 提交 `94ecc89d02ac86f08076d7d354b612d3dd54541f`；[AGPL-3.0-or-later](https://github.com/droidrun/mobilerun-portal/blob/94ecc89d02ac86f08076d7d354b612d3dd54541f/LICENSE) | 仅参考：无障碍树证明跨应用统一桥接的思路。不引入其源码、独立 Portal、远程控制端点或相应强 copyleft 依赖。 |
+| [Appium UiAutomator2 server](https://github.com/appium/appium-uiautomator2-server/tree/56bf27a222b9aa242e6a40cf87825b78b443b7be) | 提交 `56bf27a222b9aa242e6a40cf87825b78b443b7be`；[Apache-2.0](https://github.com/appium/appium-uiautomator2-server/blob/56bf27a222b9aa242e6a40cf87825b78b443b7be/LICENSE) | 评估后不集成：用于 instrumentation 测试和外部驱动。个人界面必须在无 ADB、测试运行器或业务服务器的情况下工作。 |
+| Android 系统无障碍 API | 现有 SDK；AOSP 各组件许可证；不复制源码 | 直接使用 AccessibilityService、控件动作及 TYPE_ACCESSIBILITY_OVERLAY。无新增生产依赖或服务器。仅唯一语义定位和用户触发的有限固定流程；无坐标盲点、截图上传或生成代码执行。 |
+
+桥接层由本项目实现。原应用版本/签名检查、逐组件本机试用确认、逐应用授权、描述版本检查及退出机制均独立于模型输出。普通测试保持离线。API 仅能在预览后调整现有匿名组件的文案、顺序及外观，不能发明设备操作。上架 Google Play 前必须核验无障碍申报，以及确定性自动化与自主操作的政策边界。

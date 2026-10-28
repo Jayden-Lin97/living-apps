@@ -77,4 +77,17 @@ public final class ResponsesClient {
         ResponsesProtocol.outputText(
             request("/responses", ResponsesProtocol.request(model, instructions, input))));
   }
+
+  public RebuildSpec rebuildLayout(String model, RebuildSpec baseline, String requirement)
+      throws Exception {
+    String result =
+        ResponsesProtocol.outputText(
+            request(
+                "/responses",
+                ResponsesProtocol.request(
+                    model,
+                    RebuildLayout.INSTRUCTIONS,
+                    RebuildLayout.context(baseline, requirement))));
+    return RebuildLayout.apply(baseline, result);
+  }
 }

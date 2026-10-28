@@ -53,3 +53,7 @@ Robolectric's Android native View/graphics runtime generated these images with s
 | ![Settings](qa/host-settings.png) | ![Narrow home with larger text](qa/host-home-compact-large-text.png) | ![Narrow creation with larger text](qa/host-editor-compact-large-text.png) |
 
 Regression flows cover opening an app from the library, entering and saving a record, viewing statistics, navigating to Growth/Settings/Creation, renaming offline, trying a preview and adopting a version. Records survive changes. Soft keyboards, system navigation bars, OEM fonts and other devices still need device acceptance testing.
+
+## Reconstructed interfaces
+
+The new mode reuses the native forest-green/soft-white design system. A source association card, page-picking dock, component list, appearance editor, trial status and original-app exit are explicit parts of the flow. Dynamic lists do not imply access to off-screen data. [Editor render](qa/host-rebuild-editor.png) and [runtime render](qa/host-rebuild-runtime.png) use synthetic framework windows, not a physical phone or QQ Music. See [Rebuild mode](REBUILD_MODE.md).

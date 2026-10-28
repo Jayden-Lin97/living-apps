@@ -2,13 +2,13 @@
 
 [English](VALIDATION.md) | **简体中文**
 
-版本 0.2.0，验证日期 2026-10-28。明确区分已执行的宿主测试和仅编译的设备测试。
+版本 0.3.0，验证日期 2026-10-29。明确区分已执行的宿主测试和仅编译的设备测试。
 
 ## 已执行检查
 
 | 检查 | 结果 |
 |---|---|
-| 单元与 Android 框架测试 | 74 项通过，失败 / 错误 / 跳过均为零 |
+| 单元与 Android 框架测试 | 100 项通过，失败 / 错误 / 跳过均为零 |
 | Android lint | 通过 |
 | 开发 APK | 构建成功，min SDK 26 / target 35 |
 | 设备测试 APK | 编译成功，未执行 |
@@ -27,7 +27,7 @@
 - 转换备份校验、损坏拒绝、独立副本恢复、保留后续记录与 data_epoch 校验。
 - 本地观察阈值、允许列表自动修改、冻结与恢复。
 
-测试分布：AndroidRuntimeTest 5、EditorRuntimeTest 14、MigrationRuntimeTest 8、CoreTest 26、EditingTest 10、ExtendedEditingTest 11。普通测试使用离线样例。
+测试分布：AndroidRuntimeTest 5、EditorRuntimeTest 14、MigrationRuntimeTest 8、CoreTest 26、EditingTest 10、ExtendedEditingTest 11、RebuildSpecTest 11、RebuildRuntimeTest 15。普通测试使用离线样例。
 
 ## 界面渲染
 
@@ -40,7 +40,7 @@
 
 ## 产物
 
-开发签名 APK：208320 bytes，SHA-256 `afba24d1c962baf545dd3ba44191257857062f9dd9a1a5cc218ecb3c1f8b20a9`。重建校验结果写入 `dist/artifact-audit.json`。
+开发签名 APK：226557 bytes，SHA-256 `2867637d6858026bd33d71c7d151b73bd3712fe7389b70ab125947774603ab1c`。重建校验结果写入 `dist/artifact-audit.json`。
 
 公开源码包采用显式 Android 产品允许列表。API Key 由用户输入并用 Android Keystore 保护，不进入 APK 或备份；不声称业务 SQLite 文件单独加密。全局备份不含历史、草稿、试用、事件或转换快照；需要导出转换前数据时，先恢复为独立副本。
 
@@ -51,3 +51,9 @@
 尚未开展无编程经验用户的可用性任务；自由布局、联网 / 通知、条件工作流、多选与属性级优化锁仍属后续能力。
 
 连接设备后运行 `scripts/build.ps1 -DeviceTests`。LiveApiDeviceTest 还须显式传入 `liveApiBase`、`liveApiKey`；缺少任一项时跳过付费测试。不得记录或提交凭据。
+
+## 已安装应用重构验证
+
+新增 26 项离线检查：11 项描述/模型边界测试和 15 项 Android 框架/SQLite 测试。覆盖唯一定位、来源身份、有限步骤、受保护内容、匿名 API 上下文、列表行数变化、实时文字与旧值清空、模拟节点的真实动作派发、显式试用确认与过期、原应用更新失效、选取持久化、动态列表选择、页面大小限制、熄屏退出、取消后续步骤、版本冲突和恢复。
+
+RebuildEntryDeviceTest 仅编译，未执行。服务窗口和应用包是宿主合成测试数据，按框架行为返回新窗口副本，并非真实 QQ 音乐会话。未调用付费 API。真机仍需验收完整的选择/授权/选取/输入/键盘/返回/搜索结果播放流程，以及 OEM 无障碍限制、应用更新和运行中断。详见[模式边界](REBUILD_MODE.zh-CN.md)。

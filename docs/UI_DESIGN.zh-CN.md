@@ -53,3 +53,7 @@
 | ![设置](qa/host-settings.png) | ![窄屏大字首页](qa/host-home-compact-large-text.png) | ![窄屏大字创建](qa/host-editor-compact-large-text.png) |
 
 回归流程覆盖：从应用库打开工具、填写并保存记录、查看统计、进入生长/设置、创建页面、离线修改名称、试填预览并采用版本；调整后记录仍保留。软键盘与真实系统导航栏、OEM 字体及其他设备仍需要真机验收。
+
+## 重构界面
+
+新模式沿用原生深绿/浅白设计。来源关联卡、页面选取操作条、组件列表、外观编辑、本机试用状态及原应用入口构成完整流程。动态列表不代表已取得屏幕外数据。[编辑页渲染](qa/host-rebuild-editor.png)与[运行页渲染](qa/host-rebuild-runtime.png)使用合成框架窗口，不是真机或 QQ 音乐截图。详见[重构模式](REBUILD_MODE.zh-CN.md)。
