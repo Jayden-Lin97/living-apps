@@ -1,0 +1,44 @@
+plugins { id 'com.android.application' }
+
+// Some Windows/JDK combinations fail to load test classes from non-ASCII paths.
+// Keep source in place; an optional local build output root avoids that issue.
+def externalBuildRoot = providers.environmentVariable('LIVING_APPS_BUILD_ROOT').orNull
+if (externalBuildRoot) layout.buildDirectory = file(externalBuildRoot + '/app')
+
+android {
+    namespace 'dev.livingapps'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'dev.livingapps'
+        minSdk 26
+        targetSdk 35
+        versionCode 3
+        versionName '0.2.0'
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+    buildTypes { release { minifyEnabled false } }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    testOptions {
+        unitTests.returnDefaultValues = true
+        unitTests.includeAndroidResources = true
+        unitTests.all {
+            jvmArgs '-Dfile.encoding=UTF-8', '--add-opens=java.base/java.lang=ALL-UNNAMED', '--add-opens=java.base/java.io=ALL-UNNAMED', '--add-opens=java.base/java.util=ALL-UNNAMED'
+            systemProperty 'robolectric.dependency.repo.url', 'https://repo.maven.apache.org/maven2'
+            systemProperty 'livingapps.qaDir', project.layout.buildDirectory.dir('qa').get().asFile.absolutePath
+        }
+    }
+    lint { abortOnError true }
+}
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
+    testImplementation 'org.robolectric:robolectric:4.16.1'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+}

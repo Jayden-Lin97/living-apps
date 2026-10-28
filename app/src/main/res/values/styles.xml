@@ -1,0 +1,20 @@
+<resources>
+    <style name="BaseAppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">#1C3F35</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:statusBarColor">#F6F8F5</item>
+        <item name="android:navigationBarColor">#F6F8F5</item>
+        <item name="android:windowBackground">#F6F8F5</item>
+        <item name="android:alertDialogTheme">@style/LivingDialogTheme</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+    </style>
+    <style name="AppTheme" parent="BaseAppTheme" />
+    <style name="LivingDialogTheme" parent="android:style/Theme.Material.Light.Dialog.Alert">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:colorAccent">#1C3F35</item>
+        <item name="android:windowBackground">@drawable/dialog_surface</item>
+        <item name="android:backgroundDimAmount">0.24</item>
+    </style>
+</resources>
