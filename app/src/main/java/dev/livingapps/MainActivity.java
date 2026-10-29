@@ -372,7 +372,7 @@ public final class MainActivity extends LocalizedActivity {
     }
     section(b, tr("从灵感开始"), tr("这三个模板，断网也能直接用。"));
     LinearLayout templates = ui.card();
-    List<AppSpec> all = Templates.all();
+    List<AppSpec> all = Templates.localized();
     for (int i = 0; i < all.size(); i++) {
       AppSpec template = all.get(i);
       templates.addView(
@@ -871,7 +871,7 @@ public final class MainActivity extends LocalizedActivity {
     } else {
       section(b, tr("也可以从模板开始"), tr("不需要连接 AI，直接打开使用。"));
       LinearLayout templates = ui.card();
-      for (AppSpec template : Templates.all())
+      for (AppSpec template : Templates.localized())
         templates.addView(
             ui.actionRow(
                 ui.appIcon(template),

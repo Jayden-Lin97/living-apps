@@ -88,6 +88,13 @@ public class LanguageRuntimeTest {
       assertEquals(
           "en", c.get().getResources().getConfiguration().getLocales().get(0).getLanguage());
       assertTrue(app.store.apps().stream().allMatch(a -> app.store.records(a.id).isEmpty()));
+      assertNull(find(decor(c.get()), "随手记账"));
+      click(decor(c.get()), "Create an app");
+      assertNotNull(find(decor(c.get()), "Daily spending"));
+      assertNull(find(decor(c.get()), "随手记账"));
+      click(decor(c.get()), "Daily spending");
+      assertEquals(4, app.store.apps().size());
+      assertTrue(app.store.apps().stream().allMatch(a -> a.spec.name().matches("[\\p{ASCII}]+")));
     }
   }
 
