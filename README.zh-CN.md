@@ -61,19 +61,17 @@
 Living Apps 基于 Android 8.0+、原生 Java 与 Android Views。两种描述格式共用母应用入口，同时保留独立的执行和存储边界：
 
 ```mermaid
-%%{init: {"flowchart": {"nodeSpacing": 16, "rankSpacing": 24, "curve": "linear"}}}%%
+%%{init: {"flowchart": {"nodeSpacing": 24, "rankSpacing": 24, "curve": "linear"}}}%%
 flowchart LR
-  subgraph Host["Living Apps 宿主"]
-    UI["原生工作区<br/>创建 · 编辑 · 试用"] --> Check["校验门"]
-    Check --> App["AppSpec"] --> Runtime["原生运行时<br/>表单 · 记录 · 统计"]
-    Runtime <--> Data[("SQLite 业务记录")]
-    Check --> Rebuild["RebuildSpec"] --> Bridge["原生覆盖界面<br/>无障碍桥接"]
-  end
-  Bridge <-->|"页面状态 / 用户动作"| Source["原应用<br/>同一台手机"]
-  style Host fill:transparent,stroke:#71927f,stroke-width:1px
+  UI["原生工作区"] --> Check["校验"]
+  Check --> App["AppSpec"] --> Runtime["原生运行时"]
+  Runtime <--> Data[("SQLite 业务记录")]
+  Check --> Rebuild["RebuildSpec"] --> Bridge["覆盖界面 + 桥接"]
+  Bridge <--> Source["已安装的原应用"]
+  style Source fill:transparent,stroke:#71927f,stroke-width:1px,stroke-dasharray:4 3
 ```
 
-主路径为编辑 → 校验 → 两类原生执行路径。校验覆盖描述结构、兼容性和版本基线；AI、版本与观察机制见下表。
+实线节点在 Living Apps 中运行；虚线节点为同一台手机上的原应用。校验覆盖描述结构、兼容性和版本基线，AI、版本与观察机制见下表。
 
 | 部分 | 职责与边界 |
 |---|---|
