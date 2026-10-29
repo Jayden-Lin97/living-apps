@@ -6,6 +6,8 @@
 
 [项目主页](https://www.ipsyonline.xyz/living-apps/index.zh-CN.html) · [下载](https://github.com/Jayden-Lin97/living-apps/releases) · [观看宣传片](https://www.ipsyonline.xyz/living-apps/index.zh-CN.html#demo) · [问题反馈](https://github.com/Jayden-Lin97/living-apps/issues)
 
+**交流与合作：** [linjingkai97@163.com](mailto:linjingkai97@163.com)，欢迎产品想法、技术交流与合作洽谈。
+
 ![Living Apps 四个原生界面：应用空间、画面编辑、使用观察建议和重构后的音乐界面](docs/qa/readme-overview.zh-CN.png)
 
 *你的应用空间 → 在画面中编辑 → 在使用中持续演进 → 重构已有应用。画面为含合成数据的 Android 原生 View 宿主渲染，非真机截图。点击图片可放大查看。*

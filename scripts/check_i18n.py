@@ -13,7 +13,7 @@ for path in defaults:
     assert f'[English]({path.name})' in cn_text and '**简体中文**' in cn_text,cn
     for page,text,chinese in ((path,en_text,False),(cn,cn_text,True)):
         for url in re.findall(r'\]\(([^\s)]+)',text):
-            if re.match(r'\w+://',url) or url.startswith('#'):continue
+            if re.match(r'\w+://',url) or url.startswith(('#','mailto:')):continue
             target=(page.parent/url.split('#')[0]).resolve()
             assert target in allowed,f'Link leaves public source: {page.name}: {url}'
             if target.suffix=='.md' and target not in (path.resolve(),cn.resolve()):
