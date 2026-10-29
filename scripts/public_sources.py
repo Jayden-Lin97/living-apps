@@ -14,7 +14,7 @@ def is_public_path(relative):
     if name in ROOT_FILES:return True
     if name.startswith('scripts/'):return name in {'scripts/'+n for n in PUBLIC_SCRIPTS}
     if name.startswith('docs/'):
-        return name in {'docs/'+n+suffix for n in PUBLIC_DOC_NAMES for suffix in ('.md','.zh-CN.md')} or name in ('docs/lucide-icons.json','docs/qa/technical-architecture.svg','docs/qa/technical-architecture.zh-CN.svg') or (name.startswith('docs/qa/') and path.suffix=='.png')
+        return name in {'docs/'+n+suffix for n in PUBLIC_DOC_NAMES for suffix in ('.md','.zh-CN.md')} or name=='docs/lucide-icons.json' or (name.startswith('docs/qa/') and path.suffix=='.png')
     if name.startswith('app/'):return not name.startswith('app/src/demoCapture/')
     return name.startswith(('gradle/','licenses/'))
 

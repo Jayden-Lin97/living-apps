@@ -60,16 +60,40 @@
 
 Living Apps 基于 Android 8.0+、原生 Java 与 Android Views。两种描述格式共用母应用入口，同时保留独立的执行和存储边界：
 
-![技术架构：原生工作区经校验后，分为 AppSpec、原生运行时与 SQLite 业务记录，以及 RebuildSpec、覆盖界面和桥接与已安装原应用两条路径。](docs/qa/technical-architecture.zh-CN.svg)
-
-实线节点在 Living Apps 中运行；虚线节点为同一台手机上的原应用。校验覆盖描述结构、兼容性和版本基线，AI、版本与观察机制见下表。
+```mermaid
+flowchart TB
+  User["使用者：描述、点选、编辑与试用"]
+  API["用户配置的远端 LLM API · store:false"]
+  Source["已安装的原应用 · 同一台手机"]
+  subgraph Host["Living Apps · 手机本地"]
+    UI["原生创建与编辑工作区"]
+    Check["描述、兼容性与版本基线检查"]
+    App["AppSpec · 个人应用描述"]
+    Runtime["原生表单、记录与统计"]
+    Data[("SQLite 业务记录")]
+    Rebuild["RebuildSpec · 界面绑定与固定步骤"]
+    Bridge["原生覆盖界面与无障碍桥接"]
+    History[("本地草稿与描述版本")]
+    Observe["本地观察与允许列表规则"]
+    UI --> Check
+    Check --> App --> Runtime
+    Runtime <--> Data
+    Check --> Rebuild --> Bridge
+    Check <--> History
+    Runtime --> Observe --> Check
+  end
+  User --> UI
+  UI -. "用户主动发起 AI 请求" .-> API
+  API -. "候选描述或外观" .-> Check
+  Bridge <-->|"选定页面与用户触发的动作"| Source
+```
 
 | 部分 | 职责与边界 |
 |---|---|
 | 个人应用运行层 | [AppSpec](app/src/main/java/dev/livingapps/core/AppSpec.java)、原生界面与 [Store](app/src/main/java/dev/livingapps/Store.java) 处理表单、记录、统计、草稿和版本；调整布局不删除业务记录 |
 | 已有应用重构层 | [RebuildSpec](app/src/main/java/dev/livingapps/core/RebuildSpec.java)、[RebuildStore](app/src/main/java/dev/livingapps/RebuildStore.java) 与[无障碍服务](app/src/main/java/dev/livingapps/RebuildAccessibilityService.java) 处理界面绑定和固定操作；原应用保留账号及业务数据，版本/签名检查与重复定位拒绝约束执行 |
 | 观察与演进层 | [ReflectionEngine](app/src/main/java/dev/livingapps/core/ReflectionEngine.java)、版本策略及 Android JobScheduler 为记录类应用实现本地聚合、有限建议和自动调整；重构模式不运行自主跨应用规划器 |
-| AI 辅助层 | [ResponsesClient](app/src/main/java/dev/livingapps/ResponsesClient.java) 按用户请求调用配置的 API；响应先作为候选，通过本地校验及相应采用流程后生效，不执行任意生成代码 |
+| AI 辅助层 | [ResponsesClient](app/src/main/java/dev/livingapps/ResponsesClient.java) 调用用户配置的 API；响应先作为候选，通过本地校验及相应采用流程后生效，不执行任意生成代码 |
 
 ### 计算与数据放在哪里
 

@@ -60,16 +60,40 @@ Edits remain in a local draft until you review and save. Trial records stay sepa
 
 Living Apps uses native Java and Android Views on Android 8.0+. Two definition formats share the host UI while retaining separate execution and storage boundaries:
 
-![Technical architecture: native workspace and validation branch into AppSpec with its native runtime and SQLite records, or RebuildSpec with an overlay and bridge to an installed app.](docs/qa/technical-architecture.svg)
-
-Solid nodes run in Living Apps; the dashed node is the installed source app on the same phone. Validation checks schema, compatibility and revision baselines. AI, versioning and observation are described below.
+```mermaid
+flowchart TB
+  User["User: describe, select, edit and try"]
+  API["Configured remote LLM API · store:false"]
+  Source["Installed source app · same phone"]
+  subgraph Host["Living Apps · on the phone"]
+    UI["Native creation and editing workspace"]
+    Check["Schema, compatibility and revision checks"]
+    App["AppSpec · personal app definition"]
+    Runtime["Native forms, records and statistics"]
+    Data[("SQLite business records")]
+    Rebuild["RebuildSpec · interface bindings and fixed steps"]
+    Bridge["Native overlay and accessibility bridge"]
+    History[("Local drafts and definition versions")]
+    Observe["Local observations and allowlisted rules"]
+    UI --> Check
+    Check --> App --> Runtime
+    Runtime <--> Data
+    Check --> Rebuild --> Bridge
+    Check <--> History
+    Runtime --> Observe --> Check
+  end
+  User --> UI
+  UI -. "Explicit AI request" .-> API
+  API -. "Candidate description or appearance" .-> Check
+  Bridge <-->|"Selected pages and user-triggered actions"| Source
+```
 
 | Part | Responsibilities and boundaries |
 |---|---|
 | Personal-app runtime | [AppSpec](app/src/main/java/dev/livingapps/core/AppSpec.java), the native UI and [Store](app/src/main/java/dev/livingapps/Store.java) handle forms, records, statistics, drafts and versions. Layout changes do not delete business records |
 | Installed-app reconstruction | [RebuildSpec](app/src/main/java/dev/livingapps/core/RebuildSpec.java), [RebuildStore](app/src/main/java/dev/livingapps/RebuildStore.java) and the [accessibility service](app/src/main/java/dev/livingapps/RebuildAccessibilityService.java) handle interface bindings and fixed operations. The source app retains its account and business data; version/signature checks and ambiguous-target rejection constrain execution |
 | Observation and evolution | [ReflectionEngine](app/src/main/java/dev/livingapps/core/ReflectionEngine.java), version policy and Android JobScheduler implement local aggregation and limited suggestions/automatic changes for record apps. Reconstruction does not run an autonomous cross-app planner |
-| AI assistance | [ResponsesClient](app/src/main/java/dev/livingapps/ResponsesClient.java) calls the user's configured API for requested AI features. Responses remain candidates until local validation and the relevant adoption flow; arbitrary generated code is never executed |
+| AI assistance | [ResponsesClient](app/src/main/java/dev/livingapps/ResponsesClient.java) calls the user's configured API. Responses remain candidates until local validation and the relevant adoption flow; arbitrary generated code is never executed |
 
 ### Computation and data placement
 
