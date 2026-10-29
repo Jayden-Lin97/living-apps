@@ -57,3 +57,7 @@ Regression flows cover opening an app from the library, entering and saving a re
 ## Reconstructed interfaces
 
 The new mode reuses the native forest-green/soft-white design system. A source association card, page-picking dock, component list, appearance editor, trial status and original-app exit are explicit parts of the flow. Dynamic lists do not imply access to off-screen data. [Editor render](qa/host-rebuild-editor.png) and [runtime render](qa/host-rebuild-runtime.png) use synthetic framework windows, not a physical phone or QQ Music. See [Rebuild mode](REBUILD_MODE.md).
+
+The runtime gives the bound content priority: a leading information field above a collection receives project-drawn decorative artwork, a larger value and a clear section title. Collections use quiet rows instead of individual white buttons. A final bound action remains accessible beneath the scroll area. The top-right options panel contains connection details, explicit trial confirmation, opening the source interface and stopping the session. A pending operation is labeled as awaiting review on the main screen; unavailable or invalid bindings retain visible error feedback and disabled actions. Back closes the options panel before leaving the interface. Artwork does not represent a source album cover, and the runtime does not invent playback controls, progress or source data.
+
+See the [collection interface example](qa/host-rebuild-music.png) and the [compact interface at larger font scale](qa/host-rebuild-runtime-compact-large-text.png).

@@ -77,3 +77,7 @@
 | Android 系统无障碍 API | 现有 SDK；AOSP 各组件许可证；不复制源码 | 直接使用 AccessibilityService、控件动作及 TYPE_ACCESSIBILITY_OVERLAY。无新增生产依赖或服务器。仅唯一语义定位和用户触发的有限固定流程；无坐标盲点、截图上传或生成代码执行。 |
 
 桥接层由本项目实现。原应用版本/签名检查、逐组件本机试用确认、逐应用授权、描述版本检查及退出机制均独立于模型输出。普通测试保持离线。API 仅能在预览后调整现有匿名组件的文案、顺序及外观，不能发明设备操作。上架 Google Play 前必须核验无障碍申报，以及确定性自动化与自主操作的政策边界。
+
+### 运行界面呈现（2026-10-29）
+
+重新检查 [Material Components Android 1.13.0 的底部面板实现](https://github.com/material-components/material-components-android/blob/1.13.0/lib/java/com/google/android/material/bottomsheet/BottomSheetDialog.java)及其 [Apache-2.0 许可证](https://github.com/material-components/material-components-android/blob/1.13.0/LICENSE)，参考次级操作的收起方式和系统边距处理。不复制源码、不新增依赖：使用已有系统 Views 在同一个覆盖窗口内呈现选项面板，不创建第二个服务窗口。Canvas 图案是本项目绘制的装饰，不是从原应用读取的专辑封面。信息、列表项及操作仍仅来自现有 RebuildSpec 绑定；此次呈现调整不增加播放 API、生成代码执行、数据采集或服务器。

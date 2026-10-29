@@ -243,6 +243,23 @@ public class RebuildRuntimeTest {
   }
 
   @Test
+  public void optionsKeepSourceUntouchedAndBackClosesThePanelBeforeExiting() {
+    begin();
+    View panel = overlay().findViewWithTag("rebuild-options-panel");
+    assertEquals(View.GONE, panel.getVisibility());
+    overlay().findViewWithTag("rebuild-options").performClick();
+    assertTrue(panel.isShown());
+    assertTrue(find(overlay(), "查看原应用 / 手动操作").isShown());
+    assertTrue(performed.isEmpty());
+    overlay().dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK));
+    assertNotNull(overlay());
+    assertEquals(View.GONE, panel.getVisibility());
+    assertTrue(performed.isEmpty());
+    overlay().dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK));
+    assertNull(overlay());
+  }
+
+  @Test
   public void noSessionStartsWithoutPackageConsent() {
     context.getSharedPreferences("rebuild-consent", 0).edit().clear().commit();
     service.begin(shell, false, "");
@@ -273,15 +290,17 @@ public class RebuildRuntimeTest {
   @Test
   public void userTriggeredClickRequiresExplicitTrialConfirmation() {
     begin();
-    find(overlay(), "运行 · Play").performClick();
+    find(overlay(), "Play").performClick();
     idle(600);
     assertEquals(
         ((TextView) ReflectionHelpers.getField(service, "state")).getText().toString(),
         Arrays.asList(AccessibilityNodeInfo.ACTION_CLICK),
         performed);
     assertTrue(store.get(shell).verified.isEmpty());
+    overlay().findViewWithTag("rebuild-options").performClick();
     find(overlay(), "查看原应用 / 手动操作").performClick();
     find(overlay(), "回到我的界面").performClick();
+    overlay().findViewWithTag("rebuild-options").performClick();
     find(overlay(), "结果正确，标记本机已试用").performClick();
     assertTrue(store.get(shell).verified.contains("play"));
   }
@@ -291,14 +310,14 @@ public class RebuildRuntimeTest {
     AccessibilityNodeInfo duplicate = node("play", "Play", "android.widget.Button", true);
     Shadows.shadowOf(root).addChild(duplicate);
     begin();
-    find(overlay(), "运行 · Play").performClick();
+    find(overlay(), "Play").performClick();
     idle(2500);
     assertTrue(performed.isEmpty());
     assertTrue(store.get(shell).verified.isEmpty());
     RebuildStore.Entry e = store.get(shell);
     store.save(shell, e.revision, e.spec.with("name", "Changed"));
     refresh();
-    assertFalse(find(overlay(), "运行 · Play").isEnabled());
+    assertFalse(find(overlay(), "Play").isEnabled());
   }
 
   @Test
@@ -307,7 +326,7 @@ public class RebuildRuntimeTest {
     song.setText("private password");
     begin();
     assertNull(find(overlay(), "private password"));
-    assertFalse(find(overlay(), "运行 · Play").isEnabled());
+    assertFalse(find(overlay(), "Play").isEnabled());
   }
 
   @Test
@@ -318,14 +337,14 @@ public class RebuildRuntimeTest {
             .versionCode =
         8;
     refresh();
-    assertFalse(find(overlay(), "运行 · Play").isEnabled());
+    assertFalse(find(overlay(), "Play").isEnabled());
     assertNotNull(find(overlay(), "适配已失效"));
   }
 
   @Test
   public void leavingSourceAppStopsOverlayAndCancelsPendingWork() {
     begin();
-    find(overlay(), "运行 · Play").performClick();
+    find(overlay(), "Play").performClick();
     service.stop();
     idle(3000);
     assertNull(overlay());
@@ -462,7 +481,7 @@ public class RebuildRuntimeTest {
     steps.put(J.parse(steps.optJSONObject(0).toString()));
     store.save(shell, entry.revision, entry.spec.with("widgets", J.arr(w)));
     begin();
-    find(overlay(), "运行 · Play").performClick();
+    find(overlay(), "Play").performClick();
     assertEquals(1, performed.size());
     service.stop();
     idle(2000);
@@ -477,7 +496,7 @@ public class RebuildRuntimeTest {
           .addChild(node("row" + i, "Row " + i, "android.widget.TextView", false));
     window(root);
     begin();
-    assertFalse(find(overlay(), "运行 · Play").isEnabled());
+    assertFalse(find(overlay(), "Play").isEnabled());
     assertNull(find(overlay(), "Old song"));
     assertTrue(performed.isEmpty());
   }
@@ -493,8 +512,9 @@ public class RebuildRuntimeTest {
   @Test
   public void trialEvidenceExpiresInsteadOfConfirmingAnOldAttempt() {
     begin();
-    find(overlay(), "运行 · Play").performClick();
+    find(overlay(), "Play").performClick();
     idle(61000);
+    overlay().findViewWithTag("rebuild-options").performClick();
     find(overlay(), "结果正确，标记本机已试用").performClick();
     assertTrue(store.get(shell).verified.isEmpty());
   }
@@ -510,7 +530,7 @@ public class RebuildRuntimeTest {
     String definition = store.get(shell).spec.json().toString();
     long revision = store.get(shell).revision;
     begin();
-    find(overlay(), "运行 · Play").performClick();
+    find(overlay(), "Play").performClick();
     assertEquals(1, performed.size());
     try (org.robolectric.android.controller.ActivityController<MainActivity> main =
         Robolectric.buildActivity(MainActivity.class).setup().visible()) {

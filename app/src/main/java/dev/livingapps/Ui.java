@@ -416,7 +416,7 @@ final class Ui {
     return view;
   }
 
-  private Drawable drawable(String name, int color) {
+  Drawable drawable(String name, int color) {
     int id;
     switch (name) {
       case "sprout":

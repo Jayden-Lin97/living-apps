@@ -63,6 +63,10 @@ Run `scripts/build.ps1 -DeviceTests` with a connected device. LiveApiDeviceTest 
 
 ## Installed-app reconstruction coverage
 
-28 offline checks: 11 schema/model-boundary tests and 17 Android framework/SQLite tests. These cover unique selectors, source identity, bounded steps, protected content, anonymous API context, list-row count changes, live value refresh/no stale values, actual shadow-node action dispatch, explicit trial evidence and expiry, source-version invalidation, picker persistence, dynamic list selection, page-size limits, screen-off exit, cancellation of later steps, revision conflicts, restoration and language changes with no action replay.
+29 offline checks: 11 schema/model-boundary tests and 18 Android framework/SQLite tests. These cover unique selectors, source identity, bounded steps, protected content, anonymous API context, list-row count changes, live value refresh/no stale values, actual shadow-node action dispatch, explicit trial evidence and expiry, source-version invalidation, picker persistence, dynamic list selection, page-size limits, screen-off exit, cancellation of later steps, revision conflicts, restoration and language changes with no action replay.
 
 RebuildEntryDeviceTest is compiled only. The service windows/packages are synthetic host fixtures with fresh framework window copies, not a physical QQ Music session. No live paid API was called. Real device acceptance must cover the entire source selection/authorization/picking/typing/keyboard/Back/search-results-playback loop, OEM accessibility restrictions, app updates and interruption while a workflow is running. See [mode boundaries](REBUILD_MODE.md).
+
+## Runtime presentation refresh (2026-10-29)
+
+The updated runtime passed 116 offline unit/framework tests, Android Lint and both APK builds. The additional navigation check verifies that opening options does not dispatch source-app actions and Back dismisses the panel before ending the session. Native captures cover English, Chinese, light/dark appearance and a 320 dp screen with 1.3× text. Device tests were compiled only: no device was connected. No paid API was called. Existing v0.3.1 release artifacts remain unchanged; these checks cover the current source revision.

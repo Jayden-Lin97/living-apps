@@ -870,5 +870,9 @@
   "备份记录包含不支持的数据": "The backup record contains unsupported data",
   "临时记录已不存在": "The temporary record no longer exists",
   "试用记录最多 100 条，可清空后继续": "A trial copy supports at most 100 records. Clear it to continue",
-  "试用副本过大，请减少临时记录后继续": "The trial copy is too large. Remove some temporary records to continue"
+  "试用副本过大，请减少临时记录后继续": "The trial copy is too large. Remove some temporary records to continue",
+  "界面选项": "Interface options",
+  "收起选项": "Close options",
+  "操作已发出 · 点此核对结果": "Action sent · Tap to review the result",
+  "已连接原应用 · 界面由你定义": "Connected to the original app · Your interface"
 }

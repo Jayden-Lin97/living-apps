@@ -36,6 +36,11 @@ public final class RebuildAccessibilityService extends AccessibilityService {
   private final Map<String, LinearLayout> collections = new HashMap<>();
   private TextView state;
   private Button verifyButton;
+  private TextView detailState;
+  private FrameLayout runtimeTools;
+  private LinearLayout runtimeBody;
+  private ImageButton moreButton;
+  private RebuildUi surface;
   private final BroadcastReceiver screenOff =
       new BroadcastReceiver() {
         @Override
@@ -189,6 +194,11 @@ public final class RebuildAccessibilityService extends AccessibilityService {
     collections.clear();
     state = null;
     verifyButton = null;
+    detailState = null;
+    runtimeTools = null;
+    runtimeBody = null;
+    moreButton = null;
+    surface = null;
     listen(false);
   }
 
@@ -542,83 +552,188 @@ public final class RebuildAccessibilityService extends AccessibilityService {
     inputs.clear();
     actions.clear();
     collections.clear();
-    LinearLayout root = frame(session.spec.name());
-    int fg = session.spec.dark() ? 0xffe6ede8 : Ui.INK,
-        bg = session.spec.dark() ? 0xff132a22 : Ui.BG;
-    root.setBackgroundColor(bg);
-    LinearLayout heading = (LinearLayout) root.getChildAt(0);
-    ((TextView) heading.getChildAt(2)).setTextColor(fg);
-    ((ImageButton) heading.getChildAt(3))
-        .setImageTintList(android.content.res.ColorStateList.valueOf(fg));
-    root.addView(
-        ui.text(tr("原应用执行 · 本机界面 · 按组件验证"), 11, session.spec.dark() ? Ui.LIME : Ui.MUTED, false));
-    state =
-        ui.text(
-            message.isEmpty() ? tr("正在读取原应用页面…") : message,
-            12,
-            session.spec.dark() ? Ui.LIME : Ui.GREEN,
-            false);
+    surface = new RebuildUi(ui, session.spec.dark());
+    FrameLayout layer =
+        new FrameLayout(this) {
+          @Override
+          public boolean dispatchKeyEvent(KeyEvent event) {
+            if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+              if (event.getAction() == KeyEvent.ACTION_UP) {
+                if (runtimeTools != null && runtimeTools.getVisibility() == View.VISIBLE)
+                  toggleTools();
+                else returnToLiving();
+              }
+              return true;
+            }
+            return super.dispatchKeyEvent(event);
+          }
+        };
+    layer.setFocusableInTouchMode(true);
+    layer.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS);
+    LinearLayout root = ui.col();
+    runtimeBody = root;
+    root.setBackgroundColor(surface.background);
+    root.setPadding(ui.dp(22), ui.dp(12), ui.dp(22), ui.dp(18));
+    root.setOnApplyWindowInsetsListener(
+        (v, inset) -> {
+          v.setPadding(
+              ui.dp(22) + inset.getSystemWindowInsetLeft(),
+              ui.dp(12) + inset.getSystemWindowInsetTop(),
+              ui.dp(22) + inset.getSystemWindowInsetRight(),
+              ui.dp(18) + inset.getSystemWindowInsetBottom());
+          return inset;
+        });
+    layer.addView(root, new FrameLayout.LayoutParams(-1, -1));
+    LinearLayout heading = ui.row();
+    heading.addView(surface.icon("arrow-left", tr("退出重构界面"), this::returnToLiving));
+    TextView title = ui.text(session.spec.name(), 17, surface.foreground, true);
+    title.setGravity(Gravity.CENTER);
+    title.setMaxLines(2);
+    heading.addView(title, new LinearLayout.LayoutParams(0, -2, 1));
+    moreButton = surface.icon("ellipsis", tr("界面选项"), this::toggleTools);
+    moreButton.setTag("rebuild-options");
+    heading.addView(moreButton);
+    root.addView(heading);
+    state = ui.text(tr("正在读取原应用页面…"), 11, surface.muted, false);
+    state.setGravity(Gravity.CENTER);
+    state.setPadding(0, ui.dp(2), 0, ui.dp(14));
+    state.setOnClickListener(v -> toggleTools());
     root.addView(state);
-    ui.space(root, 12);
     ScrollView scroll = new ScrollView(this);
     scroll.setFillViewport(true);
+    scroll.setClipToPadding(false);
+    scroll.setVerticalScrollBarEnabled(false);
     LinearLayout list = ui.col();
     scroll.addView(list);
     root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
     JSONArray widgets = session.spec.widgets();
+    boolean collection = false;
+    for (int i = 0; i < widgets.length(); i++)
+      collection |= widgets.optJSONObject(i).optString("kind").equals("list");
     if (widgets.length() == 0) list.addView(ui.body(tr("还没有组件。返回 Living，在原应用页面选取信息和动作。")));
     for (int i = 0; i < widgets.length(); i++) {
       JSONObject w = widgets.optJSONObject(i);
       String id = w.optString("id"), kind = w.optString("kind");
-      LinearLayout card = ui.card();
-      if (session.spec.dark()) card.setBackground(ui.shape(0xff203c31, 20, true));
-      int padding = session.spec.compact() ? 12 : 18;
-      card.setPadding(ui.dp(padding), ui.dp(padding), ui.dp(padding), ui.dp(padding));
-      card.addView(ui.text(w.optString("label"), 14, fg, true));
-      ui.space(card, 8);
+      LinearLayout section = surface.section();
+      boolean featured = i == 0 && kind.equals("read") && collection;
+      if (featured) {
+        section.addView(surface.artwork(session.spec.compact()));
+        ui.space(section, 20);
+      }
       if (kind.equals("read")) {
-        TextView value = ui.text(tr("当前页面不可用"), session.spec.compact() ? 18 : 23, fg, true);
+        section.addView(ui.text(w.optString("label"), 11, surface.muted, true));
+        ui.space(section, 8);
+        TextView value = ui.text(tr("当前页面不可用"), featured ? 27 : 22, surface.foreground, true);
         values.put(id, value);
-        card.addView(value);
+        section.addView(value);
       } else if (kind.equals("list")) {
+        section.addView(ui.text(w.optString("label"), 15, surface.foreground, true));
+        ui.space(section, 10);
         LinearLayout items = ui.col();
+        items.setPadding(ui.dp(4), ui.dp(4), ui.dp(4), ui.dp(4));
+        items.setBackground(ui.shape(surface.surface, 20, false));
+        items.setTag("rebuild-list:" + id);
         collections.put(id, items);
-        card.addView(
-            ui.text(
-                w.optBoolean("interactive") ? tr("点击项目由原应用执行 · 最多显示 40 项") : tr("只读列表 · 最多显示 40 项"),
-                10,
-                session.spec.dark() ? Ui.LIME : Ui.MUTED,
-                false));
-        card.addView(items);
+        section.addView(items);
       } else {
         if (kind.equals("input")) {
+          section.addView(ui.text(w.optString("label"), 14, surface.foreground, true));
+          ui.space(section, 8);
           EditText input = ui.input(tr("输入内容，仅用于本次操作"), false);
           input.setSaveEnabled(false);
+          input.setTextColor(surface.foreground);
+          input.setHintTextColor(surface.muted);
+          input.setBackground(ui.shape(surface.surface, 16, false));
           inputs.put(id, input);
-          card.addView(input);
-          ui.space(card, 8);
+          section.addView(input);
+          ui.space(section, 8);
         }
-        card.addView(
-            ui.text(
-                session.verified.contains(id) ? tr("本机试用已确认 · 当前适配版本") : tr("待试用确认"),
-                10,
-                session.spec.dark() ? Ui.LIME : Ui.MUTED,
-                false));
-        Button action = ui.button(tr("运行 · ") + w.optString("label"), true, () -> startAction(id));
+        Button action = surface.button(w.optString("label"), true, () -> startAction(id));
+        action.setTag("rebuild-action:" + id);
+        android.graphics.drawable.Drawable arrow =
+            ui.drawable("arrow-up-right", surface.accentText);
+        arrow.setBounds(0, 0, ui.dp(18), ui.dp(18));
+        action.setCompoundDrawablesRelative(arrow, null, null, null);
+        action.setCompoundDrawablePadding(ui.dp(10));
+        action.setMinHeight(ui.dp(56));
+        action.setMinimumHeight(ui.dp(56));
         actions.put(id, action);
-        card.addView(action);
+        section.addView(action);
       }
-      list.addView(card);
+      if (i == widgets.length() - 1 && kind.equals("action")) {
+        section.setPadding(0, ui.dp(10), 0, 0);
+        section.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
+        root.addView(section);
+      } else list.addView(section);
     }
-    verifyButton = ui.button(tr("结果正确，标记本机已试用"), false, this::confirmAttempt);
+    runtimeTools = new FrameLayout(this);
+    runtimeTools.setTag("rebuild-options-panel");
+    runtimeTools.setFocusableInTouchMode(true);
+    runtimeTools.setBackgroundColor(0x99000000);
+    runtimeTools.setOnClickListener(v -> toggleTools());
+    runtimeTools.setVisibility(View.GONE);
+    LinearLayout sheet = ui.col();
+    sheet.setClickable(true);
+    sheet.setPadding(ui.dp(24), ui.dp(20), ui.dp(24), ui.dp(28));
+    sheet.setBackground(ui.shape(surface.background, 28, false));
+    LinearLayout sheetHeader = ui.row();
+    sheetHeader.addView(
+        ui.text(tr("界面选项"), 20, surface.foreground, true), new LinearLayout.LayoutParams(0, -2, 1));
+    sheetHeader.addView(surface.icon("chevron-right", tr("收起选项"), this::toggleTools));
+    sheet.addView(sheetHeader);
+    detailState = ui.text("", 12, surface.muted, false);
+    sheet.addView(detailState);
+    ui.space(sheet, 16);
+    verifyButton = surface.button(tr("结果正确，标记本机已试用"), true, this::confirmAttempt);
     verifyButton.setVisibility(completedWidget.isEmpty() ? View.GONE : View.VISIBLE);
-    root.addView(verifyButton);
-    root.addView(ui.button(tr("查看原应用 / 手动操作"), false, () -> dock(tr("原界面已显示；核对结果后可回到自定义界面"))));
-    root.addView(ui.button(tr("停止并返回 Living"), false, this::returnToLiving));
-    show(root, true);
-    root.requestFocus();
-    root.requestApplyInsets();
+    sheet.addView(verifyButton);
+    ui.space(sheet, 10);
+    sheet.addView(
+        surface.button(tr("查看原应用 / 手动操作"), false, () -> dock(tr("原界面已显示；核对结果后可回到自定义界面"))));
+    ui.space(sheet, 10);
+    sheet.addView(surface.button(tr("停止并返回 Living"), false, this::returnToLiving));
+    ScrollView sheetScroll = new ScrollView(this);
+    sheetScroll.setFillViewport(false);
+    sheetScroll.addView(sheet);
+    runtimeTools.addView(sheetScroll, new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM));
+    runtimeTools.setOnApplyWindowInsetsListener(
+        (v, inset) -> {
+          sheet.setPadding(
+              ui.dp(24) + inset.getSystemWindowInsetLeft(),
+              ui.dp(20),
+              ui.dp(24) + inset.getSystemWindowInsetRight(),
+              ui.dp(28) + inset.getSystemWindowInsetBottom());
+          return inset;
+        });
+    layer.addView(runtimeTools, new FrameLayout.LayoutParams(-1, -1));
+    show(layer, true);
+    layer.requestFocus();
+    layer.requestApplyInsets();
     refreshValues();
+  }
+
+  private void toggleTools() {
+    if (runtimeTools == null || runtimeBody == null) return;
+    boolean open = runtimeTools.getVisibility() != View.VISIBLE;
+    runtimeTools.setVisibility(open ? View.VISIBLE : View.GONE);
+    runtimeBody.setImportantForAccessibility(
+        open
+            ? View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+            : View.IMPORTANT_FOR_ACCESSIBILITY_AUTO);
+    if (open) runtimeTools.requestFocus();
+    else if (moreButton != null) moreButton.requestFocus();
+  }
+
+  private void runtimeStatus(String detail, boolean attention) {
+    if (detailState != null)
+      detailState.setText(
+          android.text.TextUtils.concat(tr("原应用执行 · 本机界面 · 按组件验证"), "\n\n", detail));
+    if (state == null) return;
+    state.setText(
+        attention
+            ? detail
+            : !completedWidget.isEmpty() ? tr("操作已发出 · 点此核对结果") : tr("已连接原应用 · 界面由你定义"));
+    state.setTextColor(attention ? (session.spec.dark() ? 0xffffc8ac : 0xff984826) : surface.muted);
   }
 
   private void refreshValues() {
@@ -659,6 +774,7 @@ public final class RebuildAccessibilityService extends AccessibilityService {
               String label = node.data.optString("text");
               if (label.isEmpty()) label = node.data.optString("description");
               if (label.isEmpty() || label.length() > 180 || RebuildSpec.sensitive(label)) continue;
+              if (count > 0) surface.divider(list);
               if (widget.optBoolean("interactive")) {
                 JSONObject selector =
                     J.obj(
@@ -670,26 +786,27 @@ public final class RebuildAccessibilityService extends AccessibilityService {
                         node.data.optString("text"),
                         "description",
                         node.data.optString("description"));
-                Button item = ui.button(label, false, () -> clickListItem(widget, selector));
+                Button item = surface.item(label, count, () -> clickListItem(widget, selector));
                 try {
                   RebuildSpec.resolve(selector, s.data());
                 } catch (IllegalArgumentException e) {
                   item.setEnabled(false);
                 }
                 list.addView(item);
-              } else
-                list.addView(ui.text(label, 16, session.spec.dark() ? 0xffe6ede8 : Ui.INK, false));
-              ui.space(list, 6);
+              } else list.addView(ui.text(label, 16, surface.foreground, false));
               if (++count >= 40) break;
             }
           }
-          if (count == 0) list.addView(ui.body(tr("当前页面未匹配到列表内容")));
+          if (count == 0) list.addView(ui.text(tr("当前页面未匹配到列表内容"), 13, surface.muted, false));
         }
-        if (state != null)
-          state.setText(
-              !available
-                  ? tr("原页面不可读或包含敏感内容，请使用原应用")
-                  : message.isEmpty() ? tr("已连接 · 显示原应用当前页面信息") : message);
+        runtimeStatus(
+            !available
+                ? tr("原页面不可读或包含敏感内容，请使用原应用")
+                : message.isEmpty() ? tr("已连接 · 显示原应用当前页面信息") : message,
+            !available
+                || (!message.isEmpty()
+                    && completedWidget.isEmpty()
+                    && !message.equals(tr("已记录你的本机试用确认；不代表其他版本或设备兼容"))));
         if (!available) {
           completedWidget = "";
           if (verifyButton != null) verifyButton.setVisibility(View.GONE);
@@ -701,10 +818,10 @@ public final class RebuildAccessibilityService extends AccessibilityService {
       for (TextView value : values.values()) value.setText(tr("适配已失效"));
       for (LinearLayout list : collections.values()) {
         list.removeAllViews();
-        list.addView(ui.body(tr("适配已失效")));
+        list.addView(ui.text(tr("适配已失效"), 13, surface.muted, false));
       }
       for (Button b : actions.values()) b.setEnabled(false);
-      if (state != null) state.setText(e.getMessage());
+      runtimeStatus(e.getMessage(), true);
     }
   }
 
