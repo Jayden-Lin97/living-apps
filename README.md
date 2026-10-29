@@ -2,7 +2,7 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-Create your own apps and let them evolve with use. Living Apps is a local-first Android platform: one host app for creating, editing and running personal apps, with usage observations and restorable versions.
+Create your own apps and let them evolve with use. Living Apps is an Android platform for creating personal apps, designing new interfaces for installed apps, and shaping those experiences through everyday use.
 
 [Project homepage](https://www.ipsyonline.xyz/living-apps/) · [Download](https://github.com/Jayden-Lin97/living-apps/releases) · [Watch the film](https://www.ipsyonline.xyz/living-apps/#demo) · [Issues](https://github.com/Jayden-Lin97/living-apps/issues)
 
@@ -14,7 +14,7 @@ We want Living Apps to become a personal app layer on Android. In one space, peo
 
 In this vision, an app has a continuing relationship with its user: its interface can change, its useful data can persist, and improvements can be proposed, tried and restored. The agent helps that process while the user controls the direction and the permissions. Personalization includes behavior and interaction, as well as appearance.
 
-Version 0.3.0 is an initial implementation of this direction: bounded personal-app creation, installed-app interface reconstruction and local rule-based improvement. Richer app categories and broader compatibility remain development goals.
+Version 0.3.0 is an initial implementation of this direction: bounded personal-app creation, installed-app interface reconstruction and rule-based improvement. Richer app categories and broader compatibility remain development goals.
 
 ## What makes Living different
 
@@ -22,19 +22,19 @@ Version 0.3.0 is an initial implementation of this direction: bounded personal-a
 |---|---|---|
 | Apps represented as editable definitions | Creation and later changes share the same understandable editing process | Natural language and native controls modify constrained AppSpec data, interpreted by the Android host |
 | A personal interface over an installed app | Users can choose how to interact with an existing app while it continues to perform the business operations | RebuildSpec binds selected page information, dynamic lists and fixed actions to a native overlay; compatibility is checked per function |
-| An observe–propose–try–adopt–restore lifecycle | An app can keep adapting after its first creation | Local events and rules produce suggestions; optional automatic adoption currently permits only adding quick entry to record apps |
+| An observe–propose–try–adopt–restore lifecycle | An app can keep adapting after its first creation | Usage events and rules produce suggestions; optional automatic adoption currently permits only adding quick entry to record apps |
 | Interface versions separated from business records | Users can try and restore UI changes while keeping their records | Stable field IDs, persistent drafts, isolated trial records, revision checks and restorable versions; data conversion has a separate verified flow |
-| A reusable on-device engine | Different personal interfaces use a common runtime and adaptation format | Native components, semantic selectors, bounded workflows and local validation; AI APIs assist creation/editing rather than handling every tap |
+| A shared creation and reconstruction engine | Different personal interfaces use a common runtime and adaptation format | Native components, semantic selectors, bounded workflows and compatibility checks; AI APIs assist creation/editing rather than handling every tap |
 
 These mechanisms work together: create an experience, use it, adjust it and keep control of the change. Installed-app reconstruction currently relies on user-selected bindings and demonstrations; it does not automatically understand every app. Its agent-assisted editing changes appearance and existing component order/labels, without inventing device operations.
 
 ## What you can do
 
-- Start from an offline template or describe an app to a configurable AI API.
-- Select objects on the app screen, use offline controls or natural language, and keep a persistent draft with undo/redo.
+- Start from a template or describe an app to a configurable AI API.
+- Select objects on the app screen, use direct controls or natural language, and keep a persistent draft with undo/redo.
 - Try changes with isolated records, review differences, resolve conflicts and save a version.
-- Run forms, records, lists, check-ins and basic statistics locally. Group/hide fields, configure preset record actions and use a separate verified data-conversion flow.
-- Let local rules suggest improvements. Automatic adoption is off by default and currently limited to adding quick entry, with permission, freezing, cooldown and restoration.
+- Build apps for forms, records, lists, check-ins and basic statistics. Group/hide fields, configure preset record actions and use a separate verified data-conversion flow.
+- Get improvement suggestions from usage observations. Automatic adoption is off by default and currently limited to adding quick entry, with permission, freezing, cooldown and restoration.
 
 Version 0.3.0 adds [Reconstruct an existing app](docs/REBUILD_MODE.md): select an installed app, bind current-page information, dynamic lists and explicit fixed operations, then design and locally try your own interface. This is a common engine, not universal compatibility; real QQ Music acceptance is still pending.
 

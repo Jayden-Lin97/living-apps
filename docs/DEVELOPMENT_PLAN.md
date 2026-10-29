@@ -1,4 +1,4 @@
-# Living Apps — Local-first Android development plan
+# Living Apps — Android architecture and development plan
 
 **English** | [简体中文](DEVELOPMENT_PLAN.zh-CN.md)
 
@@ -29,7 +29,7 @@ Initial loop: library → creation/template → offline use and records → on-d
 | Model discovery, error handling, JSON validation | Phone | Local handling preserves the usable version on failure |
 | Dedicated business backend | Not needed initially | Introduce only for concrete needs such as account sync, collaboration or centralized billing |
 
-Local-first means app execution and personal data stay on the device. All LLMs use APIs as requested; no large model runs on the phone. How the API gateway itself operates is outside this project's control.
+App execution and personal data stay on the device. All LLMs use APIs as requested; no large model runs on the phone. How the API gateway itself operates is outside this project's control.
 
 ## Architecture
 

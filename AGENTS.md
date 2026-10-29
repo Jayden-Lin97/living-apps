@@ -2,7 +2,8 @@
 
 **English** | [简体中文](AGENTS.zh-CN.md)
 
-- Product: a local-first Android host app for personal sub-apps that can be created, edited, observed and restored.
+- Product: an Android host app for personal sub-apps that can be created, edited, observed and restored.
+- Public positioning emphasizes personal-app creation, installed-app interface reconstruction and continuous evolution. Keep computation and storage placement in technical/privacy explanations; do not promote "local-first" as a selling point.
 - Keep the public homepage and repository Markdown bilingual. English uses default filenames; Chinese uses `.zh-CN` counterparts with manual switches. Update both editions and keep document links in the selected language.
 - Before entering a new module or replacing a dependency, search for reusable open-source projects, verify the license of the exact version, and record adoption, reference or rejection reasons in `docs/OPEN_SOURCE_REVIEW.md`. Do not add a server merely to reuse a project.
 - Prefer on-device execution for UI, data, observation statistics, rules, compatibility checks, versions and background scheduling. Update the computation deployment table and justify the need before introducing a server.
