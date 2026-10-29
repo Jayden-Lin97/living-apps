@@ -60,16 +60,7 @@ Edits remain in a local draft until you review and save. Trial records stay sepa
 
 Living Apps uses native Java and Android Views on Android 8.0+. Two definition formats share the host UI while retaining separate execution and storage boundaries:
 
-```mermaid
-%%{init: {"flowchart": {"nodeSpacing": 24, "rankSpacing": 24, "curve": "linear"}}}%%
-flowchart LR
-  UI["Native workspace"] --> Check["Validation"]
-  Check --> App["AppSpec"] --> Runtime["Native runtime"]
-  Runtime <--> Data[("SQLite records")]
-  Check --> Rebuild["RebuildSpec"] --> Bridge["Overlay + bridge"]
-  Bridge <--> Source["Installed app"]
-  style Source fill:transparent,stroke:#71927f,stroke-width:1px,stroke-dasharray:4 3
-```
+![Technical architecture: native workspace and validation branch into AppSpec with its native runtime and SQLite records, or RebuildSpec with an overlay and bridge to an installed app.](docs/qa/technical-architecture.svg)
 
 Solid nodes run in Living Apps; the dashed node is the installed source app on the same phone. Validation checks schema, compatibility and revision baselines. AI, versioning and observation are described below.
 

@@ -60,16 +60,7 @@
 
 Living Apps 基于 Android 8.0+、原生 Java 与 Android Views。两种描述格式共用母应用入口，同时保留独立的执行和存储边界：
 
-```mermaid
-%%{init: {"flowchart": {"nodeSpacing": 24, "rankSpacing": 24, "curve": "linear"}}}%%
-flowchart LR
-  UI["原生工作区"] --> Check["校验"]
-  Check --> App["AppSpec"] --> Runtime["原生运行时"]
-  Runtime <--> Data[("SQLite 业务记录")]
-  Check --> Rebuild["RebuildSpec"] --> Bridge["覆盖界面 + 桥接"]
-  Bridge <--> Source["已安装的原应用"]
-  style Source fill:transparent,stroke:#71927f,stroke-width:1px,stroke-dasharray:4 3
-```
+![技术架构：原生工作区经校验后，分为 AppSpec、原生运行时与 SQLite 业务记录，以及 RebuildSpec、覆盖界面和桥接与已安装原应用两条路径。](docs/qa/technical-architecture.zh-CN.svg)
 
 实线节点在 Living Apps 中运行；虚线节点为同一台手机上的原应用。校验覆盖描述结构、兼容性和版本基线，AI、版本与观察机制见下表。
 
