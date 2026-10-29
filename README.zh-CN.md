@@ -6,6 +6,10 @@
 
 [项目主页](https://www.ipsyonline.xyz/living-apps/index.zh-CN.html) · [下载](https://github.com/Jayden-Lin97/living-apps/releases) · [观看宣传片](https://www.ipsyonline.xyz/living-apps/index.zh-CN.html#demo) · [问题反馈](https://github.com/Jayden-Lin97/living-apps/issues)
 
+![Living Apps 四个原生界面：应用空间、画面编辑、使用观察建议和重构后的音乐界面](docs/qa/readme-overview.zh-CN.png)
+
+*你的应用空间 → 在画面中编辑 → 在使用中持续演进 → 重构已有应用。画面为含合成数据的 Android 原生 View 宿主渲染，非真机截图。点击图片可放大查看。*
+
 ## 愿景：重新定义下一代 App
 
 **让使用者能够决定应用的功能、交互方式与演进方向。**
@@ -107,10 +111,6 @@ flowchart TB
 - [验证与设备测试边界](docs/VALIDATION.zh-CN.md)
 - [路线](docs/ROADMAP.zh-CN.md)
 - [参与贡献](CONTRIBUTING.zh-CN.md) · [安全问题](SECURITY.zh-CN.md) · [MIT 许可](LICENSE)
-
-下图为实际 Android 原生 View 宿主渲染，含合成数据，不是真机截图：
-
-![原生应用库](docs/qa/host-home.png)
 
 ## 构建与验证
 

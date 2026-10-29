@@ -6,6 +6,10 @@ Create your own apps and let them evolve with use. Living Apps is an Android pla
 
 [Project homepage](https://www.ipsyonline.xyz/living-apps/) · [Download](https://github.com/Jayden-Lin97/living-apps/releases) · [Watch the film](https://www.ipsyonline.xyz/living-apps/#demo) · [Issues](https://github.com/Jayden-Lin97/living-apps/issues)
 
+![Four native Living Apps screens: app library, direct editing, usage-based improvement suggestions and a reconstructed music interface](docs/qa/readme-overview.png)
+
+*Your app space → edit on the screen → evolve with use → reimagine an existing app. Android native View host renders with synthetic data; not physical-device screenshots. Click the image to enlarge.*
+
 ## Vision: redefining the next generation of apps
 
 **Let people shape the apps they use: what they do, how they work and how they evolve.**
@@ -107,10 +111,6 @@ Connected source apps retain their own network requirements. Reconstruction does
 - [Validation and device-testing limits](docs/VALIDATION.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [MIT license](LICENSE)
-
-The image below is an actual Android native View host render with synthetic data, not a physical-device screenshot:
-
-![Native app library](docs/qa/host-home.png)
 
 ## Build and validate
 
