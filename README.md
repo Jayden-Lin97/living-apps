@@ -12,7 +12,7 @@ Create your own apps and let them evolve with use. Living Apps is an Android pla
 
 *Your app space → edit on the screen → evolve with use → reimagine an existing app. Android native View host renders with synthetic data; not physical-device screenshots. Click the image to enlarge.*
 
-## Vision: redefining the next generation of apps
+## Vision: redefining the next generation of super apps
 
 **Let people shape the apps they use: what they do, how they work and how they evolve.**
 
@@ -23,6 +23,10 @@ In this vision, an app has a continuing relationship with its user: its interfac
 Version 0.3.0 is an initial implementation of this direction: bounded personal-app creation, installed-app interface reconstruction and rule-based improvement. Richer app categories and broader compatibility remain development goals.
 
 ## What makes Living different
+
+![Architecture comparison of conventional apps, existing super apps and Living Apps, with separate definition control and native execution planes](docs/qa/superapp-architecture.png)
+
+*Conceptual comparison of abstraction, change authority and evolution units, with Living's definition/control and native execution planes. Click to enlarge.*
 
 | Design choice | Value for the user | Current implementation |
 |---|---|---|
