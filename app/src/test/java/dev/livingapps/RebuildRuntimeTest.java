@@ -26,7 +26,7 @@ import org.robolectric.util.ReflectionHelpers;
 @RunWith(RobolectricTestRunner.class)
 @Config(
     sdk = 35,
-    qualifiers = "w360dp-h760dp-port-xxhdpi",
+    qualifiers = "zh-rCN-w360dp-h760dp-port-xxhdpi",
     shadows = RebuildRuntimeTest.FreshWindows.class)
 public class RebuildRuntimeTest {
   @Implements(android.accessibilityservice.AccessibilityService.class)
@@ -359,7 +359,7 @@ public class RebuildRuntimeTest {
     service.begin(shell, false, "");
     idle(750);
     capture(overlay(), "rebuild-runtime-dark");
-    RuntimeEnvironment.setQualifiers("w320dp-h640dp-port-xxhdpi");
+    RuntimeEnvironment.setQualifiers("zh-rCN-w320dp-h640dp-port-xxhdpi");
     android.content.res.Configuration larger =
         new android.content.res.Configuration(context.getResources().getConfiguration());
     larger.fontScale = 1.3f;
@@ -497,6 +497,57 @@ public class RebuildRuntimeTest {
     idle(61000);
     find(overlay(), "结果正确，标记本机已试用").performClick();
     assertTrue(store.get(shell).verified.isEmpty());
+  }
+
+  @Test
+  public void languageSwitchStopsPendingStepsWithoutChangingTheDefinition() {
+    RebuildStore.Entry before = store.get(shell);
+    JSONObject action = before.spec.widget("play");
+    action
+        .optJSONArray("steps")
+        .put(J.parse(action.optJSONArray("steps").optJSONObject(0).toString()));
+    store.save(shell, before.revision, before.spec.with("widgets", J.arr(action)));
+    String definition = store.get(shell).spec.json().toString();
+    long revision = store.get(shell).revision;
+    begin();
+    find(overlay(), "运行 · Play").performClick();
+    assertEquals(1, performed.size());
+    try (org.robolectric.android.controller.ActivityController<MainActivity> main =
+        Robolectric.buildActivity(MainActivity.class).setup().visible()) {
+      Languages.choose(main.get(), Languages.ENGLISH);
+      idle(2500);
+      assertNull(overlay());
+      assertEquals(1, performed.size());
+      assertEquals(definition, store.get(shell).spec.json().toString());
+      assertEquals(revision, store.get(shell).revision);
+      service.begin(shell, false, "");
+      idle(750);
+      View stop = find(overlay(), "Stop and return to Living");
+      assertNotNull(stop);
+      assertEquals(
+          "en",
+          stop.getContext().getResources().getConfiguration().getLocales().get(0).getLanguage());
+      assertEquals(1, performed.size());
+    }
+  }
+
+  @Test
+  @Config(qualifiers = "en-w320dp-h640dp-port-xxhdpi")
+  @GraphicsMode(GraphicsMode.Mode.NATIVE)
+  public void englishRebuildControlsRenderWithoutTranslatingSourceInformation() throws Exception {
+    try (org.robolectric.android.controller.ActivityController<RebuildActivity> controller =
+        Robolectric.buildActivity(
+                RebuildActivity.class,
+                new Intent(context, RebuildActivity.class).putExtra("shell", shell))
+            .setup()
+            .visible()) {
+      assertNotNull(find(controller.get().getWindow().getDecorView(), "Open my interface"));
+      capture(controller.get().getWindow().getDecorView(), "language-rebuild-editor-en");
+    }
+    begin();
+    assertNotNull(find(overlay(), "View original app / act manually"));
+    assertNotNull(find(overlay(), "Old song"));
+    capture(overlay(), "language-rebuild-overlay-en");
   }
 
   private void capture(View view, String name) throws Exception {

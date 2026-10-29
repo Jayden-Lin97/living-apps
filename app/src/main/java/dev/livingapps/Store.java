@@ -1,5 +1,7 @@
 package dev.livingapps;
 
+import static dev.livingapps.core.Messages.tr;
+
 import android.content.*;
 import android.database.Cursor;
 import android.database.sqlite.*;
@@ -105,7 +107,7 @@ public final class Store extends SQLiteOpenHelper {
             .rawQuery("SELECT data_epoch FROM apps WHERE id=?", new String[] {appId})) {
       if (cursor.moveToFirst()) return cursor.getInt(0);
     }
-    throw new IllegalArgumentException("应用不存在");
+    throw new IllegalArgumentException(tr("应用不存在"));
   }
 
   private void createDraftTables(SQLiteDatabase db) {
@@ -133,7 +135,7 @@ public final class Store extends SQLiteOpenHelper {
             .rawQuery("SELECT payload FROM drafts WHERE app_id=?", new String[] {appId})) {
       if (!cursor.moveToFirst()) return null;
       EditSession session = EditSession.parse(cursor.getString(0));
-      if (!session.appId.equals(appId)) throw new IllegalStateException("草稿所属应用不匹配");
+      if (!session.appId.equals(appId)) throw new IllegalStateException(tr("草稿所属应用不匹配"));
       return session;
     }
   }
@@ -167,7 +169,7 @@ public final class Store extends SQLiteOpenHelper {
     JSONObject encoded = session.json();
     J.put(encoded, "storageRevision", session.storageRevision + 1);
     String payload = encoded.toString();
-    if (payload.length() > 4_000_000) throw new IllegalArgumentException("草稿过大，请保存版本或导出后重新编辑");
+    if (payload.length() > 4_000_000) throw new IllegalArgumentException(tr("草稿过大，请保存版本或导出后重新编辑"));
     ContentValues values = new ContentValues();
     values.put("payload", payload);
     values.put("revision", session.revision);
@@ -180,7 +182,7 @@ public final class Store extends SQLiteOpenHelper {
                 values,
                 "app_id=? AND id=? AND storage_revision=?",
                 new String[] {session.appId, session.id, String.valueOf(session.storageRevision)});
-    if (count != 1) throw new IllegalStateException("草稿已被其他编辑会话更新或关闭，请重新打开");
+    if (count != 1) throw new IllegalStateException(tr("草稿已被其他编辑会话更新或关闭，请重新打开"));
     session.storageRevision++;
   }
 
@@ -208,10 +210,10 @@ public final class Store extends SQLiteOpenHelper {
           || stored.revision != session.revision
           || stored.storageRevision != session.storageRevision
           || !EditChanges.same(stored.spec.json(), session.spec.json()))
-        throw new IllegalStateException("草稿已在其他会话变化，请重新打开");
+        throw new IllegalStateException(tr("草稿已在其他会话变化，请重新打开"));
       App app = app(session.appId);
       if (!app.versionId.equals(session.baseVersion))
-        throw new IllegalStateException("正式应用已有新版本，请先合并到最新版；你的草稿已保留");
+        throw new IllegalStateException(tr("正式应用已有新版本，请先合并到最新版；你的草稿已保留"));
       EditChanges.Impact impact = draftImpact(session);
       if (!impact.allowed()) throw new IllegalArgumentException(String.join("\n", impact.problems));
       String version = app.versionId;
@@ -288,7 +290,7 @@ public final class Store extends SQLiteOpenHelper {
 
   public App app(String appId) {
     for (App app : apps()) if (app.id.equals(appId)) return app;
-    throw new IllegalArgumentException("应用不存在");
+    throw new IllegalArgumentException(tr("应用不存在"));
   }
 
   public String create(AppSpec spec, String source) {
@@ -302,7 +304,7 @@ public final class Store extends SQLiteOpenHelper {
       a.put("current_version", versionId);
       a.put("created", now);
       db.insertOrThrow("apps", null, a);
-      insertVersion(db, versionId, appId, spec, "创建应用", source, now);
+      insertVersion(db, versionId, appId, spec, tr("创建应用"), source, now);
       db.setTransactionSuccessful();
       return appId;
     } finally {
@@ -341,12 +343,12 @@ public final class Store extends SQLiteOpenHelper {
     try {
       App app = app(appId);
       if (!app.versionId.equals(expectedVersion))
-        throw new IllegalStateException("应用已在别处更新，请重新预览本次修改");
-      if (source.equals("auto") && app.frozen) throw new IllegalStateException("应用已固定，不再自动修改");
+        throw new IllegalStateException(tr("应用已在别处更新，请重新预览本次修改"));
+      if (source.equals("auto") && app.frozen) throw new IllegalStateException(tr("应用已固定，不再自动修改"));
       if (source.equals("auto") && hasDraft(appId))
-        throw new IllegalStateException("应用有未完成草稿，暂缓自动采用");
+        throw new IllegalStateException(tr("应用有未完成草稿，暂缓自动采用"));
       if (source.equals("auto") && !VersionPolicy.autoAllowed(app.spec, next))
-        throw new IllegalArgumentException("这项修改不在自动优化允许范围内");
+        throw new IllegalArgumentException(tr("这项修改不在自动优化允许范围内"));
       if (!restoring) {
         List<String> errors = VersionPolicy.errors(app.spec, next);
         if (!errors.isEmpty()) throw new IllegalArgumentException(String.join("\n", errors));
@@ -357,7 +359,8 @@ public final class Store extends SQLiteOpenHelper {
             compatible = true;
             break;
           }
-        if (!compatible) throw new IllegalStateException("该版本早于数据转换；请从“转换前备份”恢复为副本，避免用旧类型解释新记录");
+        if (!compatible)
+          throw new IllegalStateException(tr("该版本早于数据转换；请从“转换前备份”恢复为副本，避免用旧类型解释新记录"));
       }
       String version = id();
       long now = System.currentTimeMillis();
@@ -434,7 +437,7 @@ public final class Store extends SQLiteOpenHelper {
     try {
       App app = app(appId);
       if (!app.versionId.equals(expectedVersion))
-        throw new IllegalStateException("应用已更新，请重新打开表单后保存");
+        throw new IllegalStateException(tr("应用已更新，请重新打开表单后保存"));
       List<String> errors = app.spec.validateRecord(fields);
       if (!errors.isEmpty()) throw new IllegalArgumentException(String.join("\n", errors));
       long now = System.currentTimeMillis();
@@ -447,7 +450,7 @@ public final class Store extends SQLiteOpenHelper {
             found = true;
             break;
           }
-        if (!found) throw new IllegalArgumentException("记录已删除");
+        if (!found) throw new IllegalArgumentException(tr("记录已删除"));
       }
       // Keep fields hidden by an older restored UI; never discard historical values.
       Iterator<String> keys = fields.keys();
@@ -478,14 +481,14 @@ public final class Store extends SQLiteOpenHelper {
     try {
       App app = app(appId);
       if (!app.versionId.equals(expectedVersion))
-        throw new IllegalStateException("应用已更新，请重新打开后点击动作");
+        throw new IllegalStateException(tr("应用已更新，请重新打开后点击动作"));
       for (ActionSpec action : app.spec.actions())
         if (action.id.equals(actionId)) {
           String result = saveRecord(appId, expectedVersion, null, action.resolved(app.spec));
           db.setTransactionSuccessful();
           return result;
         }
-      throw new IllegalArgumentException("动作已不存在");
+      throw new IllegalArgumentException(tr("动作已不存在"));
     } finally {
       db.endTransaction();
     }
@@ -502,7 +505,7 @@ public final class Store extends SQLiteOpenHelper {
       for (Entry entry : records(appId))
         if (entry.id.equals(recordId)) {
           if (!EditChanges.same(entry.data, original))
-            throw new IllegalStateException("这条记录已经编辑过，请到记录列表检查后再决定是否删除");
+            throw new IllegalStateException(tr("这条记录已经编辑过，请到记录列表检查后再决定是否删除"));
           deleteRecord(appId, recordId);
           db.setTransactionSuccessful();
           return true;
@@ -522,7 +525,7 @@ public final class Store extends SQLiteOpenHelper {
 
   public void event(String appId, String version, String kind, long elapsed) {
     if (!Arrays.asList("open", "save", "stats", "validation_error", "cancel").contains(kind))
-      throw new IllegalArgumentException("未知使用事件");
+      throw new IllegalArgumentException(tr("未知使用事件"));
     ContentValues e = new ContentValues();
     e.put("app_id", appId);
     e.put("version_id", version);
@@ -683,14 +686,14 @@ public final class Store extends SQLiteOpenHelper {
       for (byte b : bytes) out.append(String.format(Locale.ROOT, "%02x", b & 255));
       return out.toString();
     } catch (Exception e) {
-      throw new IllegalStateException("无法校验本机备份", e);
+      throw new IllegalStateException(tr("无法校验本机备份"), e);
     }
   }
 
   private String migrationSnapshot(String appId) {
     App app = app(appId);
     List<Entry> rows = records(appId);
-    if (rows.size() > 5000) throw new IllegalArgumentException("转换暂限每应用 5000 条记录，请先导出并整理数据");
+    if (rows.size() > 5000) throw new IllegalArgumentException(tr("转换暂限每应用 5000 条记录，请先导出并整理数据"));
     JSONArray data = new JSONArray();
     for (Entry entry : rows)
       data.put(J.obj("id", entry.id, "data", entry.data, "created", entry.created));
@@ -703,7 +706,8 @@ public final class Store extends SQLiteOpenHelper {
                 "apps",
                 J.arr(J.obj("spec", app.spec.json(), "frozen", app.frozen, "records", data)))
             .toString();
-    if (payload.length() > 5_000_000) throw new IllegalArgumentException("转换前备份超过 5 MB，请先导出并整理数据");
+    if (payload.length() > 5_000_000)
+      throw new IllegalArgumentException(tr("转换前备份超过 5 MB，请先导出并整理数据"));
     return payload;
   }
 
@@ -715,10 +719,10 @@ public final class Store extends SQLiteOpenHelper {
       App app = app(appId);
       if (!app.versionId.equals(expectedVersion)
           || !EditChanges.same(app.spec.json(), plan.before.json()))
-        throw new IllegalStateException("应用已改变，请重新演算转换");
+        throw new IllegalStateException(tr("应用已改变，请重新演算转换"));
       EditSession draft = draft(appId);
       if (draft != null && (draft.changed() || !draft.baseVersion.equals(app.versionId)))
-        throw new IllegalStateException("请先保存或放弃普通编辑草稿，再进入数据转换");
+        throw new IllegalStateException(tr("请先保存或放弃普通编辑草稿，再进入数据转换"));
       PreparedMigration prepared =
           new PreparedMigration(
               appId,
@@ -740,8 +744,8 @@ public final class Store extends SQLiteOpenHelper {
       PreparedMigration checked =
           prepareMigration(prepared.appId, prepared.baseVersion, prepared.plan);
       if (!checked.fingerprint.equals(prepared.fingerprint))
-        throw new IllegalStateException("记录在演算后已经变化，请重新检查数量与转换结果");
-      if (!checked.result.allowed()) throw new IllegalArgumentException("仍有转换失败的记录，未改写任何数据");
+        throw new IllegalStateException(tr("记录在演算后已经变化，请重新检查数量与转换结果"));
+      if (!checked.result.allowed()) throw new IllegalArgumentException(tr("仍有转换失败的记录，未改写任何数据"));
       String payload = migrationSnapshot(prepared.appId), backupId = id();
       ContentValues backup = new ContentValues();
       backup.put("id", backupId);
@@ -762,7 +766,7 @@ public final class Store extends SQLiteOpenHelper {
                 values,
                 "app_id=? AND id=?",
                 new String[] {prepared.appId, rows.get(i).id})
-            != 1) throw new IllegalStateException("转换时记录变化，已回滚");
+            != 1) throw new IllegalStateException(tr("转换时记录变化，已回滚"));
       }
       EditSession draft = draft(prepared.appId);
       if (draft != null) {
@@ -799,10 +803,10 @@ public final class Store extends SQLiteOpenHelper {
             .rawQuery(
                 "SELECT payload,digest FROM migration_backups WHERE app_id=? AND id=?",
                 new String[] {appId, backupId})) {
-      if (!cursor.moveToFirst()) throw new IllegalArgumentException("找不到转换备份");
+      if (!cursor.moveToFirst()) throw new IllegalArgumentException(tr("找不到转换备份"));
       String payload = cursor.getString(0);
       if (!digest(payload).equals(cursor.getString(1)))
-        throw new IllegalStateException("转换备份校验失败，无法恢复副本");
+        throw new IllegalStateException(tr("转换备份校验失败，无法恢复副本"));
       return payload;
     }
   }
@@ -834,7 +838,7 @@ public final class Store extends SQLiteOpenHelper {
       JSONObject app = backup.optJSONArray("apps").optJSONObject(0);
       JSONObject raw = app.optJSONObject("spec");
       String name = raw.optString("name");
-      J.put(raw, "name", name.substring(0, Math.min(name.length(), 34)) + "·转换前副本");
+      J.put(raw, "name", name.substring(0, Math.min(name.length(), 34)) + tr("·转换前副本"));
       Set<String> oldIds = new HashSet<>();
       for (App existing : apps()) oldIds.add(existing.id);
       importBackup(backup.toString());
@@ -843,7 +847,7 @@ public final class Store extends SQLiteOpenHelper {
           db.setTransactionSuccessful();
           return restored.id;
         }
-      throw new IllegalStateException("未能创建恢复副本");
+      throw new IllegalStateException(tr("未能创建恢复副本"));
     } finally {
       db.endTransaction();
     }
@@ -861,13 +865,13 @@ public final class Store extends SQLiteOpenHelper {
   }
 
   public int importBackup(String text) {
-    if (text.length() > 5_000_000) throw new IllegalArgumentException("备份不能超过 5 MB");
+    if (text.length() > 5_000_000) throw new IllegalArgumentException(tr("备份不能超过 5 MB"));
     JSONObject root = J.parse(text);
     JSONArray array = root.optJSONArray("apps");
     if (!root.optString("format").equals("living-apps-backup")
         || root.optInt("version") != 1
         || array == null
-        || array.length() > 50) throw new IllegalArgumentException("不支持的备份格式");
+        || array.length() > 50) throw new IllegalArgumentException(tr("不支持的备份格式"));
     SQLiteDatabase db = getWritableDatabase();
     db.beginTransaction();
     try {
@@ -875,27 +879,27 @@ public final class Store extends SQLiteOpenHelper {
       for (int i = 0; i < array.length(); i++) {
         JSONObject raw = array.optJSONObject(i);
         if (raw == null || raw.optJSONObject("spec") == null)
-          throw new IllegalArgumentException("备份应用损坏");
+          throw new IllegalArgumentException(tr("备份应用损坏"));
         AppSpec spec = AppSpec.parse(raw.optJSONObject("spec").toString());
         String appId = create(spec, "import");
         freeze(appId, raw.optBoolean("frozen"));
         JSONArray records = raw.optJSONArray("records");
         if (records == null || records.length() > 5000)
-          throw new IllegalArgumentException("记录数量超出限制");
+          throw new IllegalArgumentException(tr("记录数量超出限制"));
         for (int k = 0; k < records.length(); k++) {
           JSONObject row = records.optJSONObject(k),
               data = row == null ? null : row.optJSONObject("data");
           if (data == null
               || data.length() > 100
               || data.toString().length() > 100000
-              || ++total > 20000) throw new IllegalArgumentException("备份记录无效");
+              || ++total > 20000) throw new IllegalArgumentException(tr("备份记录无效"));
           Iterator<String> keys = data.keys();
           while (keys.hasNext()) {
             Object value = data.opt(keys.next());
             if (value instanceof JSONObject
                 || value instanceof JSONArray
                 || value instanceof String && ((String) value).length() > 4000)
-              throw new IllegalArgumentException("备份记录包含不支持的数据");
+              throw new IllegalArgumentException(tr("备份记录包含不支持的数据"));
           }
           ContentValues values = new ContentValues();
           values.put("id", id());

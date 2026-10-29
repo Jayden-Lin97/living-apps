@@ -38,7 +38,7 @@ These are host-rendered Android native Views. Narrow-screen checks cover visible
 
 ## Actual interface renders
 
-Robolectric's Android native View/graphics runtime generated these images with synthetic test data. They show the implementation, not concept art or device screenshots. The Android UI currently uses Chinese.
+Robolectric's Android native View/graphics runtime generated these images with synthetic test data. They show the implementation, not concept art or device screenshots. These captures use the Chinese UI; the app also supports English and a system-default language setting.
 
 | Library | Create an app | Growth observations |
 |---|---|---|

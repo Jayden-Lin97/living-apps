@@ -4,6 +4,17 @@
 
 检索日期：2026-10-27。本表随模块开发更新，并区分实际分发、测试依赖和设计参考。
 
+## 应用语言（2026-10-29）
+
+| 项目 | 核验的确切源码 / 许可证 | 结论及边界 |
+|---|---|---|
+| Android 系统 LocaleManager | [AOSP android-15.0.0_r1](https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-15.0.0_r1/core/java/android/app/LocaleManager.java)，文件头 Apache-2.0 | Android 13+ 使用系统 API 并声明英文、简体中文；Android 8–12 使用本地偏好与 Configuration 上下文。不复制平台源码。 |
+| AndroidX AppCompat | [1.7.1 POM 及许可](https://dl.google.com/dl/android/maven2/androidx/appcompat/appcompat/1.7.1/appcompat-1.7.1.pom)，Apache-2.0 | 评估后不引入。现有原生 Activity / View 可完成双语，无需迁移到 AppCompat 或新增生产依赖。 |
+
+系统文案（包括核心校验消息）使用随包分发的词典和显式读取调用，全部是本机数据查找，不执行代码，不在运行时调用翻译服务、模型或服务器。不对整个 View 或用户文本做自动翻译。内置模板只在首次创建时本地化；已有描述、稳定 ID、选项与业务记录在语言切换时保持原样。切换语言会结束当前重构会话并取消待执行步骤，不重放操作。
+
+## 初始基础选型
+
 | 项目 | 许可 | 结论 | 原因 / 实际采用 |
 |---|---|---|---|
 | [DivKit](https://github.com/divkit/divkit) | Apache-2.0 | 参考，后续复杂布局的可替换候选 | 原生解释 JSON UI；支持本地描述文件。首版数据表单所需组件较少，采用更小的受约束运行时 |

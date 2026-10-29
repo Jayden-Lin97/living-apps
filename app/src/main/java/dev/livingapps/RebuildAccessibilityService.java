@@ -1,5 +1,7 @@
 package dev.livingapps;
 
+import static dev.livingapps.core.Messages.tr;
+
 import android.accessibilityservice.*;
 import android.content.*;
 import android.os.*;
@@ -12,6 +14,11 @@ import org.json.*;
 
 /** Explicit foreground sessions only. No remote control, screenshot capture or background agent. */
 public final class RebuildAccessibilityService extends AccessibilityService {
+  @Override
+  protected void attachBaseContext(Context base) {
+    super.attachBaseContext(Languages.wrap(base));
+  }
+
   static RebuildAccessibilityService connected;
   private final Handler handler = new Handler(Looper.getMainLooper());
   private RebuildStore store;
@@ -134,6 +141,7 @@ public final class RebuildAccessibilityService extends AccessibilityService {
 
   void begin(String id, boolean pick, String append) {
     stop();
+    ui = new Ui(Languages.wrap(this));
     session = store.get(id);
     picking = pick;
     appendTo = append == null ? "" : append;
@@ -141,10 +149,10 @@ public final class RebuildAccessibilityService extends AccessibilityService {
       assertCurrent();
       if (!getSharedPreferences("rebuild-consent", MODE_PRIVATE)
           .getBoolean(session.spec.pkg(), false))
-        throw new IllegalStateException("请先在 Living 阅读并同意本机操作授权");
+        throw new IllegalStateException(tr("请先在 Living 阅读并同意本机操作授权"));
       listen(true);
       Intent launch = getPackageManager().getLaunchIntentForPackage(session.spec.pkg());
-      if (launch == null) throw new IllegalStateException("无法打开原应用");
+      if (launch == null) throw new IllegalStateException(tr("无法打开原应用"));
       launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
       startActivity(launch);
       waiting = true;
@@ -154,7 +162,7 @@ public final class RebuildAccessibilityService extends AccessibilityService {
           () -> {
             if (token != generation || session == null) return;
             waiting = false;
-            if (picking) dock("在原应用打开目标页面，再选取信息或操作");
+            if (picking) dock(tr("在原应用打开目标页面，再选取信息或操作"));
             else render();
           },
           700);
@@ -201,9 +209,9 @@ public final class RebuildAccessibilityService extends AccessibilityService {
   }
 
   private void assertCurrent() {
-    if (session == null) throw new IllegalStateException("会话已结束");
+    if (session == null) throw new IllegalStateException(tr("会话已结束"));
     RebuildStore.Entry current = store.get(session.id);
-    if (current.revision != session.revision) throw new IllegalStateException("界面已有新版本，请重新打开");
+    if (current.revision != session.revision) throw new IllegalStateException(tr("界面已有新版本，请重新打开"));
     RebuildTarget target = RebuildTarget.get(this, session.spec.pkg());
     session.spec.assertTarget(target.pkg, target.version, target.certificate);
   }
@@ -333,7 +341,7 @@ public final class RebuildAccessibilityService extends AccessibilityService {
     } catch (RuntimeException e) {
       overlay = null;
       stop();
-      error(new IllegalStateException("无法显示覆盖界面，请检查系统授权"));
+      error(new IllegalStateException(tr("无法显示覆盖界面，请检查系统授权")));
     }
   }
 
@@ -367,7 +375,7 @@ public final class RebuildAccessibilityService extends AccessibilityService {
     head.addView(ui.badge("layout-grid", Ui.GREEN, 36));
     ui.gap(head, 10);
     head.addView(ui.text(title, 18, Ui.INK, true), new LinearLayout.LayoutParams(0, -2, 1));
-    head.addView(ui.iconButton("arrow-left", "退出重构界面", () -> returnToLiving()));
+    head.addView(ui.iconButton("arrow-left", tr("退出重构界面"), () -> returnToLiving()));
     root.addView(head);
     ui.space(root, 12);
     return root;
@@ -383,12 +391,13 @@ public final class RebuildAccessibilityService extends AccessibilityService {
     LinearLayout root = ui.col();
     root.setPadding(ui.dp(14), ui.dp(12), ui.dp(14), ui.dp(20));
     root.setBackground(ui.shape(Ui.BG, 20, true));
-    root.addView(ui.text("Living · " + (picking ? "选取页面内容" : "原应用操作中"), 14, Ui.GREEN, true));
+    root.addView(
+        ui.text("Living · " + (picking ? tr("选取页面内容") : tr("原应用操作中")), 14, Ui.GREEN, true));
     root.addView(ui.body(hint));
     ui.space(root, 8);
-    if (picking) root.addView(ui.button("选取当前页面", true, this::pickPage));
-    else root.addView(ui.button("回到我的界面", true, this::render));
-    root.addView(ui.button("完成并返回 Living", false, this::returnToLiving));
+    if (picking) root.addView(ui.button(tr("选取当前页面"), true, this::pickPage));
+    else root.addView(ui.button(tr("回到我的界面"), true, this::render));
+    root.addView(ui.button(tr("完成并返回 Living"), false, this::returnToLiving));
     show(root, false);
   }
 
@@ -396,12 +405,12 @@ public final class RebuildAccessibilityService extends AccessibilityService {
     try {
       assertCurrent();
       try (Snapshot snap = snapshot()) {
-        if (!snap.available) throw new IllegalStateException("请先打开所选原应用的页面");
+        if (!snap.available) throw new IllegalStateException(tr("请先打开所选原应用的页面"));
         if (snap.foreignActive || snap.truncated)
-          throw new IllegalStateException("页面过于复杂或不在原应用中，请换一个页面");
-        if (snap.sensitive) throw new IllegalStateException("此页包含敏感操作或受保护内容，请在原应用处理并换一个页面");
-        LinearLayout root = frame("选择页面内容");
-        root.addView(ui.body("只读取当前已加载页面。选取后可改名称和顺序；未匹配的内容不会保留旧值。"));
+          throw new IllegalStateException(tr("页面过于复杂或不在原应用中，请换一个页面"));
+        if (snap.sensitive) throw new IllegalStateException(tr("此页包含敏感操作或受保护内容，请在原应用处理并换一个页面"));
+        LinearLayout root = frame(tr("选择页面内容"));
+        root.addView(ui.body(tr("只读取当前已加载页面。选取后可改名称和顺序；未匹配的内容不会保留旧值。")));
         ScrollView scroll = new ScrollView(this);
         LinearLayout list = ui.col();
         scroll.addView(list);
@@ -413,7 +422,7 @@ public final class RebuildAccessibilityService extends AccessibilityService {
           String label = d.optString("text");
           if (label.isEmpty()) label = d.optString("description");
           if (label.isEmpty())
-            label = d.optBoolean("input") ? "输入框" : d.optBoolean("scroll") ? "滚动列表" : "";
+            label = d.optBoolean("input") ? tr("输入框") : d.optBoolean("scroll") ? tr("滚动列表") : "";
           if (label.isEmpty() || label.length() > 180) continue;
           final String title = label.length() > 50 ? label.substring(0, 50) : label;
           LinearLayout card = ui.card();
@@ -440,14 +449,14 @@ public final class RebuildAccessibilityService extends AccessibilityService {
               String page = RebuildSpec.pageSignature(snap.data());
               card.addView(
                   ui.button(
-                      "显示同类列表（" + countMatches + " 项，只读）",
+                      tr("显示同类列表（") + countMatches + tr(" 项，只读）"),
                       false,
-                      () -> addSelection("页面列表", "list", group, page)));
+                      () -> addSelection(tr("页面列表"), "list", group, page)));
               card.addView(
                   ui.button(
-                      "显示同类列表，并允许点击项目",
+                      tr("显示同类列表，并允许点击项目"),
                       false,
-                      () -> addSelection("页面列表", "list_click", group, page)));
+                      () -> addSelection(tr("页面列表"), "list_click", group, page)));
               added = true;
             }
           }
@@ -458,10 +467,10 @@ public final class RebuildAccessibilityService extends AccessibilityService {
               JSONObject selected = selector(node, snap, kind.equals("read"));
               String button =
                   kind.equals("read")
-                      ? "显示这条信息"
+                      ? tr("显示这条信息")
                       : kind.equals("click")
-                          ? "添加点击动作"
-                          : kind.equals("input") ? "添加输入动作" : "添加滚动动作";
+                          ? tr("添加点击动作")
+                          : kind.equals("input") ? tr("添加输入动作") : tr("添加滚动动作");
               String page = RebuildSpec.pageSignature(snap.data());
               if (!kind.equals("read")
                   && RebuildSpec.sensitive(d.optString("text") + " " + d.optString("description")))
@@ -477,8 +486,8 @@ public final class RebuildAccessibilityService extends AccessibilityService {
             count++;
           }
         }
-        if (count == 0) list.addView(ui.body("此页没有可唯一定位的内容。可返回原应用换一页；不会使用坐标盲点。"));
-        root.addView(ui.button("返回原应用换一页", false, () -> dock("打开下一页后，再点选取")));
+        if (count == 0) list.addView(ui.body(tr("此页没有可唯一定位的内容。可返回原应用换一页；不会使用坐标盲点。")));
+        root.addView(ui.button(tr("返回原应用换一页"), false, () -> dock(tr("打开下一页后，再点选取"))));
         show(root, true);
       }
     } catch (Exception e) {
@@ -500,7 +509,7 @@ public final class RebuildAccessibilityService extends AccessibilityService {
           if (kind.equals("input")) J.put(w, "kind", "input");
           found = true;
         }
-        if (!found) throw new IllegalArgumentException("原动作不存在");
+        if (!found) throw new IllegalArgumentException(tr("原动作不存在"));
       } else {
         boolean list = kind.startsWith("list");
         JSONObject w =
@@ -542,10 +551,10 @@ public final class RebuildAccessibilityService extends AccessibilityService {
     ((ImageButton) heading.getChildAt(3))
         .setImageTintList(android.content.res.ColorStateList.valueOf(fg));
     root.addView(
-        ui.text("原应用执行 · 本机界面 · 按组件验证", 11, session.spec.dark() ? Ui.LIME : Ui.MUTED, false));
+        ui.text(tr("原应用执行 · 本机界面 · 按组件验证"), 11, session.spec.dark() ? Ui.LIME : Ui.MUTED, false));
     state =
         ui.text(
-            message.isEmpty() ? "正在读取原应用页面…" : message,
+            message.isEmpty() ? tr("正在读取原应用页面…") : message,
             12,
             session.spec.dark() ? Ui.LIME : Ui.GREEN,
             false);
@@ -557,7 +566,7 @@ public final class RebuildAccessibilityService extends AccessibilityService {
     scroll.addView(list);
     root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
     JSONArray widgets = session.spec.widgets();
-    if (widgets.length() == 0) list.addView(ui.body("还没有组件。返回 Living，在原应用页面选取信息和动作。"));
+    if (widgets.length() == 0) list.addView(ui.body(tr("还没有组件。返回 Living，在原应用页面选取信息和动作。")));
     for (int i = 0; i < widgets.length(); i++) {
       JSONObject w = widgets.optJSONObject(i);
       String id = w.optString("id"), kind = w.optString("kind");
@@ -568,7 +577,7 @@ public final class RebuildAccessibilityService extends AccessibilityService {
       card.addView(ui.text(w.optString("label"), 14, fg, true));
       ui.space(card, 8);
       if (kind.equals("read")) {
-        TextView value = ui.text("当前页面不可用", session.spec.compact() ? 18 : 23, fg, true);
+        TextView value = ui.text(tr("当前页面不可用"), session.spec.compact() ? 18 : 23, fg, true);
         values.put(id, value);
         card.addView(value);
       } else if (kind.equals("list")) {
@@ -576,14 +585,14 @@ public final class RebuildAccessibilityService extends AccessibilityService {
         collections.put(id, items);
         card.addView(
             ui.text(
-                w.optBoolean("interactive") ? "点击项目由原应用执行 · 最多显示 40 项" : "只读列表 · 最多显示 40 项",
+                w.optBoolean("interactive") ? tr("点击项目由原应用执行 · 最多显示 40 项") : tr("只读列表 · 最多显示 40 项"),
                 10,
                 session.spec.dark() ? Ui.LIME : Ui.MUTED,
                 false));
         card.addView(items);
       } else {
         if (kind.equals("input")) {
-          EditText input = ui.input("输入内容，仅用于本次操作", false);
+          EditText input = ui.input(tr("输入内容，仅用于本次操作"), false);
           input.setSaveEnabled(false);
           inputs.put(id, input);
           card.addView(input);
@@ -591,21 +600,21 @@ public final class RebuildAccessibilityService extends AccessibilityService {
         }
         card.addView(
             ui.text(
-                session.verified.contains(id) ? "本机试用已确认 · 当前适配版本" : "待试用确认",
+                session.verified.contains(id) ? tr("本机试用已确认 · 当前适配版本") : tr("待试用确认"),
                 10,
                 session.spec.dark() ? Ui.LIME : Ui.MUTED,
                 false));
-        Button action = ui.button("运行 · " + w.optString("label"), true, () -> startAction(id));
+        Button action = ui.button(tr("运行 · ") + w.optString("label"), true, () -> startAction(id));
         actions.put(id, action);
         card.addView(action);
       }
       list.addView(card);
     }
-    verifyButton = ui.button("结果正确，标记本机已试用", false, this::confirmAttempt);
+    verifyButton = ui.button(tr("结果正确，标记本机已试用"), false, this::confirmAttempt);
     verifyButton.setVisibility(completedWidget.isEmpty() ? View.GONE : View.VISIBLE);
     root.addView(verifyButton);
-    root.addView(ui.button("查看原应用 / 手动操作", false, () -> dock("原界面已显示；核对结果后可回到自定义界面")));
-    root.addView(ui.button("停止并返回 Living", false, this::returnToLiving));
+    root.addView(ui.button(tr("查看原应用 / 手动操作"), false, () -> dock(tr("原界面已显示；核对结果后可回到自定义界面"))));
+    root.addView(ui.button(tr("停止并返回 Living"), false, this::returnToLiving));
     show(root, true);
     root.requestFocus();
     root.requestApplyInsets();
@@ -623,17 +632,17 @@ public final class RebuildAccessibilityService extends AccessibilityService {
         }
         boolean available = s.available && !s.sensitive && !s.truncated;
         for (Map.Entry<String, TextView> value : values.entrySet()) {
-          String text = "当前页面未匹配";
+          String text = tr("当前页面未匹配");
           if (available)
             try {
               JSONObject w = session.spec.widget(value.getKey());
               if (!w.optString("page").equals(RebuildSpec.pageSignature(s.data())))
-                throw new IllegalArgumentException("页面结构已变化");
+                throw new IllegalArgumentException(tr("页面结构已变化"));
               JSONObject node =
                   s.nodes.get(RebuildSpec.resolve(w.optJSONObject("selector"), s.data())).data;
               text = node.optString("text");
               if (text.isEmpty()) text = node.optString("description");
-              if (text.isEmpty()) text = "此控件当前没有文本";
+              if (text.isEmpty()) text = tr("此控件当前没有文本");
             } catch (IllegalArgumentException ignored) {
             }
           value.getValue().setText(text);
@@ -674,13 +683,13 @@ public final class RebuildAccessibilityService extends AccessibilityService {
               if (++count >= 40) break;
             }
           }
-          if (count == 0) list.addView(ui.body("当前页面未匹配到列表内容"));
+          if (count == 0) list.addView(ui.body(tr("当前页面未匹配到列表内容")));
         }
         if (state != null)
           state.setText(
               !available
-                  ? "原页面不可读或包含敏感内容，请使用原应用"
-                  : message.isEmpty() ? "已连接 · 显示原应用当前页面信息" : message);
+                  ? tr("原页面不可读或包含敏感内容，请使用原应用")
+                  : message.isEmpty() ? tr("已连接 · 显示原应用当前页面信息") : message);
         if (!available) {
           completedWidget = "";
           if (verifyButton != null) verifyButton.setVisibility(View.GONE);
@@ -689,10 +698,10 @@ public final class RebuildAccessibilityService extends AccessibilityService {
     } catch (Exception e) {
       completedWidget = "";
       if (verifyButton != null) verifyButton.setVisibility(View.GONE);
-      for (TextView value : values.values()) value.setText("适配已失效");
+      for (TextView value : values.values()) value.setText(tr("适配已失效"));
       for (LinearLayout list : collections.values()) {
         list.removeAllViews();
-        list.addView(ui.body("适配已失效"));
+        list.addView(ui.body(tr("适配已失效")));
       }
       for (Button b : actions.values()) b.setEnabled(false);
       if (state != null) state.setText(e.getMessage());
@@ -706,11 +715,11 @@ public final class RebuildAccessibilityService extends AccessibilityService {
       JSONObject widget = session.spec.widget(id);
       String input = inputs.containsKey(id) ? inputs.get(id).getText().toString() : "";
       if (input.length() > 500 || RebuildSpec.sensitive(input))
-        throw new IllegalArgumentException("此内容不适合通过重构界面输入，请使用原应用");
+        throw new IllegalArgumentException(tr("此内容不适合通过重构界面输入，请使用原应用"));
       if (widget.optString("kind").equals("input") && input.trim().isEmpty())
-        throw new IllegalArgumentException("请先输入本次操作内容");
+        throw new IllegalArgumentException(tr("请先输入本次操作内容"));
       completedWidget = "";
-      message = "执行中…";
+      message = tr("执行中…");
       busy = true;
       for (Button b : actions.values()) b.setEnabled(false);
       if (verifyButton != null) verifyButton.setVisibility(View.GONE);
@@ -732,22 +741,23 @@ public final class RebuildAccessibilityService extends AccessibilityService {
         busy = false;
         completedWidget = widget.optString("id");
         completedAt = SystemClock.uptimeMillis();
-        message = "操作已发出，请核对原应用实际结果；尚未自动判定成功";
+        message = tr("操作已发出，请核对原应用实际结果；尚未自动判定成功");
         render();
         return;
       }
       JSONObject step = steps.optJSONObject(index);
       try (Snapshot snap = snapshot()) {
         if (!snap.available || snap.sensitive || snap.foreignActive || snap.truncated)
-          throw new IllegalStateException("原页面不可操作，请返回原应用处理");
+          throw new IllegalStateException(tr("原页面不可操作，请返回原应用处理"));
         int found;
         try {
           if (!step.optString("page").equals(RebuildSpec.pageSignature(snap.data())))
-            throw new IllegalArgumentException("页面结构不匹配，请重新示范");
+            throw new IllegalArgumentException(tr("页面结构不匹配，请重新示范"));
           found = RebuildSpec.resolve(step.optJSONObject("selector"), snap.data());
         } catch (IllegalArgumentException e) {
           if (retries < 5
-              && (e.getMessage().startsWith("当前页面找不到") || e.getMessage().startsWith("页面结构不匹配"))) {
+              && (e.getMessage().startsWith(tr("当前页面找不到"))
+                  || e.getMessage().startsWith(tr("页面结构不匹配")))) {
             handler.postDelayed(() -> runStep(widget, index, input, token, retries + 1), 300);
             return;
           }
@@ -759,7 +769,7 @@ public final class RebuildAccessibilityService extends AccessibilityService {
         if (!data.optBoolean("enabled")
             || !data.optBoolean(op)
             || RebuildSpec.sensitive(data.optString("text") + " " + data.optString("description")))
-          throw new IllegalStateException("目标控件不可执行此操作");
+          throw new IllegalStateException(tr("目标控件不可执行此操作"));
         int action =
             op.equals("click")
                 ? AccessibilityNodeInfo.ACTION_CLICK
@@ -770,7 +780,7 @@ public final class RebuildAccessibilityService extends AccessibilityService {
         if (op.equals("input"))
           args.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, input);
         if (!target.nativeNode.performAction(action, args))
-          throw new IllegalStateException("原应用没有接受操作，请重新示范");
+          throw new IllegalStateException(tr("原应用没有接受操作，请重新示范"));
       }
       handler.postDelayed(() -> runStep(widget, index + 1, input, token, 0), 450);
     } catch (Exception e) {
@@ -787,14 +797,14 @@ public final class RebuildAccessibilityService extends AccessibilityService {
       assertCurrent();
       try (Snapshot snapshot = snapshot()) {
         if (!snapshot.available || snapshot.sensitive)
-          throw new IllegalStateException("请先在原应用核对结果");
+          throw new IllegalStateException(tr("请先在原应用核对结果"));
       }
       if (SystemClock.uptimeMillis() - completedAt > 60000)
-        throw new IllegalStateException("本次试用已超过一分钟，请重新运行并核对");
+        throw new IllegalStateException(tr("本次试用已超过一分钟，请重新运行并核对"));
       store.verify(session.id, session.revision, completedWidget);
       session = store.get(session.id);
       completedWidget = "";
-      message = "已记录你的本机试用确认；不代表其他版本或设备兼容";
+      message = tr("已记录你的本机试用确认；不代表其他版本或设备兼容");
       render();
     } catch (Exception e) {
       error(e);
@@ -812,7 +822,7 @@ public final class RebuildAccessibilityService extends AccessibilityService {
             || snap.foreignActive
             || snap.truncated
             || !widget.optString("page").equals(RebuildSpec.pageSignature(snap.data())))
-          throw new IllegalStateException("页面已变化，请重新读取列表");
+          throw new IllegalStateException(tr("页面已变化，请重新读取列表"));
         AccessibilityNodeInfo target =
             AccessibilityNodeInfo.obtain(
                 snap.nodes.get(RebuildSpec.resolve(selector, snap.data())).nativeNode);
@@ -829,16 +839,16 @@ public final class RebuildAccessibilityService extends AccessibilityService {
               || !session.spec.pkg().contentEquals(target.getPackageName())
               || RebuildSpec.sensitive(
                   string(target.getText()) + " " + string(target.getContentDescription())))
-            throw new IllegalStateException("这个列表项没有可用的点击操作，请使用原应用");
+            throw new IllegalStateException(tr("这个列表项没有可用的点击操作，请使用原应用"));
           if (!target.performAction(AccessibilityNodeInfo.ACTION_CLICK))
-            throw new IllegalStateException("原应用没有接受点击");
+            throw new IllegalStateException(tr("原应用没有接受点击"));
         } finally {
           if (target != null) target.recycle();
         }
       }
       completedWidget = widget.optString("id");
       completedAt = SystemClock.uptimeMillis();
-      message = "已点击列表项，请核对原应用实际结果";
+      message = tr("已点击列表项，请核对原应用实际结果");
       render();
     } catch (Exception e) {
       message = e.getMessage();
@@ -857,7 +867,7 @@ public final class RebuildAccessibilityService extends AccessibilityService {
   }
 
   private void error(Exception e) {
-    Toast.makeText(this, e.getMessage() == null ? "暂时没有完成" : e.getMessage(), Toast.LENGTH_LONG)
+    Toast.makeText(this, e.getMessage() == null ? tr("暂时没有完成") : e.getMessage(), Toast.LENGTH_LONG)
         .show();
   }
 }

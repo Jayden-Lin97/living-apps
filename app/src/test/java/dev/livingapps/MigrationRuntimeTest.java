@@ -12,7 +12,7 @@ import org.robolectric.*;
 import org.robolectric.annotation.Config;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = 35)
+@Config(sdk = 35, qualifiers = "zh-rCN")
 public class MigrationRuntimeTest {
   private Store store;
   private String id, version;

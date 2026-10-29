@@ -1,5 +1,7 @@
 package dev.livingapps;
 
+import static dev.livingapps.core.Messages.tr;
+
 import android.content.*;
 import android.database.Cursor;
 import android.database.sqlite.*;
@@ -45,7 +47,7 @@ final class RebuildStore extends SQLiteOpenHelper {
     try (Cursor c =
         getReadableDatabase()
             .rawQuery("SELECT revision,spec,verified FROM shells WHERE id=?", new String[] {id})) {
-      if (!c.moveToFirst()) throw new IllegalArgumentException("重构应用不存在");
+      if (!c.moveToFirst()) throw new IllegalArgumentException(tr("重构应用不存在"));
       Entry e = new Entry();
       e.id = id;
       e.revision = c.getLong(0);
@@ -80,15 +82,15 @@ final class RebuildStore extends SQLiteOpenHelper {
     db.beginTransaction();
     try {
       Entry e = get(id);
-      if (e.revision != baseline) throw new IllegalStateException("界面已有新版本，请重新打开");
+      if (e.revision != baseline) throw new IllegalStateException(tr("界面已有新版本，请重新打开"));
       if (!e.spec.pkg().equals(spec.pkg()) || !e.spec.certificate().equals(spec.certificate()))
-        throw new IllegalArgumentException("不能更换来源或签名");
+        throw new IllegalArgumentException(tr("不能更换来源或签名"));
       ContentValues v = new ContentValues();
       v.put("revision", baseline + 1);
       v.put("spec", spec.json().toString());
       v.put("verified", "{\"ids\":[]}");
       if (db.update("shells", v, "id=? AND revision=?", new String[] {id, "" + baseline}) != 1)
-        throw new IllegalStateException("版本已变化");
+        throw new IllegalStateException(tr("版本已变化"));
       history(db, id, baseline + 1, spec);
       db.setTransactionSuccessful();
     } finally {
@@ -122,7 +124,7 @@ final class RebuildStore extends SQLiteOpenHelper {
             .rawQuery(
                 "SELECT spec FROM history WHERE shell=? AND revision=?",
                 new String[] {id, "" + version})) {
-      if (!c.moveToFirst()) throw new IllegalArgumentException("历史不存在");
+      if (!c.moveToFirst()) throw new IllegalArgumentException(tr("历史不存在"));
       save(id, baseline, new RebuildSpec(J.parse(c.getString(0))));
     }
   }
@@ -132,7 +134,7 @@ final class RebuildStore extends SQLiteOpenHelper {
     db.beginTransaction();
     try {
       Entry e = get(id);
-      if (e.revision != baseline) throw new IllegalStateException("版本已变化，需要重新试用");
+      if (e.revision != baseline) throw new IllegalStateException(tr("版本已变化，需要重新试用"));
       e.spec.widget(widget);
       e.verified.add(widget);
       org.json.JSONArray ids = J.arr();

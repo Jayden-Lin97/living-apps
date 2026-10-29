@@ -1,12 +1,18 @@
-# Using Living Apps 0.3.0
+# Using Living Apps 0.3.1
 
 **English** | [简体中文](USER_GUIDE.zh-CN.md)
 
 ## Install and start
 
-Install `dist/living-apps-0.3.0-debug.apk`, requiring Android 8.0 or later. This development-signed validation build is not in an app store. Installing over an older version with the same signature preserves apps and records; the database upgrades automatically.
+Install `dist/living-apps-0.3.1-debug.apk`, requiring Android 8.0 or later. This development-signed validation build is not in an app store. Installing over an older version with the same signature preserves apps and records; the database upgrades automatically.
 
-First launch offers offline spending, water and reading templates with no fabricated records. Open one to add records; tap a record to edit or delete it. Statistics run on the phone. The pencil opens editing, and the history icon opens versions. The current Android interface is in Chinese; the website and documentation have separate English and Chinese editions.
+First launch offers offline spending, water and reading templates with no fabricated records. Open one to add records; tap a record to edit or delete it. Statistics run on the phone. The pencil opens editing, and the history icon opens versions. The Android interface, website and documentation support English and Simplified Chinese.
+
+## Choose the app language
+
+Open **Settings → Language / 语言** and choose **Follow system**, **简体中文** or **English**. The preference survives app restarts. System-default mode chooses a supported system language and falls back to English. Android 13+ also exposes the choice in the system app-language settings; Android 8–12 stores it locally.
+
+The switch changes menus, editor controls, validation messages and reconstruction controls. Existing app names, field labels/options, records and saved AI conversations remain in their original language. Built-in templates use the selected language only when first created. Saved drafts and versions are retained; previously saved free-text status/history notes may retain their original wording. An active reconstruction session ends and pending steps are cancelled; reopen the interface to continue. Language selection works offline and does not change your API model, key or automatic-improvement preference.
 
 ## Creation and AI configuration
 

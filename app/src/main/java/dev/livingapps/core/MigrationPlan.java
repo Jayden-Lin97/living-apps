@@ -1,5 +1,7 @@
 package dev.livingapps.core;
 
+import static dev.livingapps.core.Messages.tr;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
@@ -27,29 +29,31 @@ public final class MigrationPlan {
     this.mapping =
         mapping == null ? null : Collections.unmodifiableMap(new LinkedHashMap<>(mapping));
     AppSpec.Field field = before.field(fieldId);
-    if (field == null) throw new IllegalArgumentException("记录项已不存在");
+    if (field == null) throw new IllegalArgumentException(tr("记录项已不存在"));
     if (factor != null) {
       if (!field.type.equals("number")
           || !before.metricField().equals(fieldId)
           || !Double.isFinite(factor)
           || factor <= 0
-          || factor == 1) throw new IllegalArgumentException("只对累计数字项使用有限、正数且不为 1 的换算倍率");
+          || factor == 1) throw new IllegalArgumentException(tr("只对累计数字项使用有限、正数且不为 1 的换算倍率"));
       if (unit == null || unit.trim().isEmpty() || unit.length() > 12)
-        throw new IllegalArgumentException("请填写换算后的单位，最多 12 字");
-      description = field.label + "：全部非空数值 × " + factor + "；单位 " + before.unit() + " → " + unit;
+        throw new IllegalArgumentException(tr("请填写换算后的单位，最多 12 字"));
+      description =
+          field.label + tr("：全部非空数值 × ") + factor + tr("；单位 ") + before.unit() + " → " + unit;
     } else if (mapping != null) {
       if (!field.type.equals("choice") || !mapping.keySet().equals(new HashSet<>(field.options)))
-        throw new IllegalArgumentException("必须为每个旧选项指定目标内容");
-      description = field.label + "：映射旧选项 " + mapping;
+        throw new IllegalArgumentException(tr("必须为每个旧选项指定目标内容"));
+      description = field.label + tr("：映射旧选项 ") + mapping;
     } else {
-      if (!targets(field.type).contains(target)) throw new IllegalArgumentException("暂不支持这种类型转换");
+      if (!targets(field.type).contains(target))
+        throw new IllegalArgumentException(tr("暂不支持这种类型转换"));
       description =
           field.label
               + "："
               + field.type
               + " → "
               + target
-              + (before.metricField().equals(fieldId) ? "；关闭该项原累计与单位" : "");
+              + (before.metricField().equals(fieldId) ? tr("；关闭该项原累计与单位") : "");
     }
     JSONObject root = before.json();
     JSONArray fields = root.optJSONArray("fields");
@@ -75,7 +79,7 @@ public final class MigrationPlan {
       JSONObject values = actions.optJSONObject(i).optJSONObject("values");
       if (!values.has(fieldId) || values.opt(fieldId) == JSONObject.NULL) continue;
       if (field.type.equals("date") && "$today".equals(values.opt(fieldId)))
-        throw new IllegalArgumentException("请先移除或修改引用该日期的“点击当天”固定动作，再转换类型");
+        throw new IllegalArgumentException(tr("请先移除或修改引用该日期的“点击当天”固定动作，再转换类型"));
       J.put(values, fieldId, convert(values.opt(fieldId)));
     }
     after = AppSpec.parse(root.toString());
@@ -104,41 +108,41 @@ public final class MigrationPlan {
     if (value == null || value == JSONObject.NULL) return JSONObject.NULL;
     if (mapping != null) {
       if (!(value instanceof String) || !mapping.containsKey(value))
-        throw new IllegalArgumentException("存在未映射的旧选项");
+        throw new IllegalArgumentException(tr("存在未映射的旧选项"));
       return mapping.get(value);
     }
     if (factor != null) {
-      if (!(value instanceof Number)) throw new IllegalArgumentException("原值不是数字");
+      if (!(value instanceof Number)) throw new IllegalArgumentException(tr("原值不是数字"));
       double result =
           BigDecimal.valueOf(((Number) value).doubleValue())
               .multiply(BigDecimal.valueOf(factor))
               .doubleValue();
-      if (!Double.isFinite(result)) throw new IllegalArgumentException("换算结果超出范围");
+      if (!Double.isFinite(result)) throw new IllegalArgumentException(tr("换算结果超出范围"));
       return result;
     }
     String from = before.field(fieldId).type;
     if (target.equals("text")) {
       if (from.equals("number")) {
         if (!(value instanceof Number) || !Double.isFinite(((Number) value).doubleValue()))
-          throw new IllegalArgumentException("原值不是有效数字");
+          throw new IllegalArgumentException(tr("原值不是有效数字"));
         return BigDecimal.valueOf(((Number) value).doubleValue())
             .stripTrailingZeros()
             .toPlainString();
       }
       if (from.equals("boolean")) {
-        if (!(value instanceof Boolean)) throw new IllegalArgumentException("原值不是开关");
+        if (!(value instanceof Boolean)) throw new IllegalArgumentException(tr("原值不是开关"));
         return value.toString();
       }
       LocalDate.parse(String.valueOf(value));
       return value.toString();
     }
-    if (!(value instanceof String)) throw new IllegalArgumentException("原值不是文字");
+    if (!(value instanceof String)) throw new IllegalArgumentException(tr("原值不是文字"));
     String text = ((String) value).trim();
     if (target.equals("number")) {
       if (!text.matches("[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?"))
-        throw new IllegalArgumentException("文字不是数字");
+        throw new IllegalArgumentException(tr("文字不是数字"));
       double n = Double.parseDouble(text);
-      if (!Double.isFinite(n)) throw new IllegalArgumentException("数字超出范围");
+      if (!Double.isFinite(n)) throw new IllegalArgumentException(tr("数字超出范围"));
       return n;
     }
     if (target.equals("date")) {
@@ -147,7 +151,7 @@ public final class MigrationPlan {
     }
     if (text.equals("true") || text.equals("是")) return true;
     if (text.equals("false") || text.equals("否")) return false;
-    throw new IllegalArgumentException("开关只接受 true、false、是、否");
+    throw new IllegalArgumentException(tr("开关只接受 true、false、是、否"));
   }
 
   public static final class Result {
@@ -159,15 +163,15 @@ public final class MigrationPlan {
     }
 
     public String summary() {
-      return "可转换 "
+      return tr("可转换 ")
           + converted
-          + " 条 · 空值 "
+          + tr(" 条 · 空值 ")
           + empty
-          + " 条 · 缺项 "
+          + tr(" 条 · 缺项 ")
           + missing
-          + " 条 · 失败 "
+          + tr(" 条 · 失败 ")
           + failed
-          + " 条";
+          + tr(" 条");
     }
   }
 
@@ -189,7 +193,7 @@ public final class MigrationPlan {
       try {
         Object converted = convert(row.opt(fieldId));
         if (field.error(converted, field.required) != null)
-          throw new IllegalArgumentException("转换后不合法");
+          throw new IllegalArgumentException(tr("转换后不合法"));
         J.put(next, fieldId, converted);
         result.converted++;
       } catch (Exception e) {

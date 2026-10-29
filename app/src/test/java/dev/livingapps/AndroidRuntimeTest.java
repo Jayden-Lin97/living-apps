@@ -19,7 +19,7 @@ import org.robolectric.shadows.ShadowAlertDialog;
 
 /** Android framework and real native SQLite on the host; not a physical-device test. */
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = 35, qualifiers = "w360dp-h720dp-port-xxhdpi")
+@Config(sdk = 35, qualifiers = "zh-rCN-w360dp-h720dp-port-xxhdpi")
 public class AndroidRuntimeTest {
   private Context context;
   private Store store;
@@ -184,7 +184,7 @@ public class AndroidRuntimeTest {
       assertEquals("调整界面不改变记录", 1, target.records(app.id).size());
       assertEquals("仅打开编辑器尚不发布", 1, target.versions(app.id).size());
     }
-    RuntimeEnvironment.setQualifiers("w320dp-h640dp-port-xxhdpi");
+    RuntimeEnvironment.setQualifiers("zh-rCN-w320dp-h640dp-port-xxhdpi");
     android.content.res.Resources resources = context.getResources();
     android.content.res.Configuration large =
         new android.content.res.Configuration(resources.getConfiguration());

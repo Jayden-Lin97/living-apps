@@ -8,6 +8,18 @@ import org.json.*;
 import org.junit.Test;
 
 public class CoreTest {
+  private final java.util.Locale previousTestLocale = java.util.Locale.getDefault();
+
+  @org.junit.Before
+  public void selectChineseCopy() {
+    java.util.Locale.setDefault(java.util.Locale.SIMPLIFIED_CHINESE);
+  }
+
+  @org.junit.After
+  public void restoreCopyLocale() {
+    java.util.Locale.setDefault(previousTestLocale);
+  }
+
   private AppSpec base() {
     return Templates.all().get(0);
   }
@@ -205,8 +217,7 @@ public class CoreTest {
   @Test
   public void credentialsInUrlAndUnexpectedHttpAreRejected() {
     assertEquals(
-        "http://127.0.0.1:8080/v1",
-        ResponsesProtocol.validateBase("http://127.0.0.1:8080/v1/"));
+        "http://127.0.0.1:8080/v1", ResponsesProtocol.validateBase("http://127.0.0.1:8080/v1/"));
     assertEquals(
         "https://api.example.com/v1", ResponsesProtocol.validateBase("https://api.example.com/v1"));
     rejected(() -> ResponsesProtocol.validateBase("https://secret@example.com/v1"));

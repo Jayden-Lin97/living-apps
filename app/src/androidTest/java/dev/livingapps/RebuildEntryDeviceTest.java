@@ -13,6 +13,8 @@ import org.junit.runner.RunWith;
 /** Device entry/disclosure smoke test. Never grants accessibility permission or calls APIs. */
 @RunWith(AndroidJUnit4.class)
 public class RebuildEntryDeviceTest {
+  @org.junit.Rule public final ChineseUiRule language = new ChineseUiRule();
+
   @Test
   public void rebuiltAppEntryExplainsScopeBeforeEnablingService() {
     Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();

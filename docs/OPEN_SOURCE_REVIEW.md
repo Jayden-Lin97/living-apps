@@ -4,6 +4,17 @@
 
 Initial review: 2026-10-27. This record evolves with modules and distinguishes distributed code, test dependencies and design references.
 
+## App languages (2026-10-29)
+
+| Project | Exact source / license verified | Decision and boundary |
+|---|---|---|
+| Android platform LocaleManager | [AOSP android-15.0.0_r1](https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-15.0.0_r1/core/java/android/app/LocaleManager.java), Apache-2.0 header | Use the installed system API on Android 13+, with declared English/Simplified Chinese locales. On Android 8–12, use local preferences and Configuration contexts. No platform source copied. |
+| AndroidX AppCompat | [1.7.1 POM and license](https://dl.google.com/dl/android/maven2/androidx/appcompat/appcompat/1.7.1/appcompat-1.7.1.pom), Apache-2.0 | Evaluated, not added. The current platform Activity/View architecture supports the two languages without an AppCompat migration or another production dependency. |
+
+Authored system copy uses a bundled catalog and explicit lookup calls, including core validation messages. It is a local data lookup: no code execution, server, translation service or model call at runtime. User definitions and record values never pass through a blanket view translator. Built-in templates are localized only when first created. Saved definitions, stable IDs, options and records remain unchanged across switches. Changing language ends an active reconstruction session and cancels pending steps without replaying operations.
+
+## Initial foundations
+
 | Project | License | Decision | Reason / actual use |
 |---|---|---|---|
 | [DivKit](https://github.com/divkit/divkit) | Apache-2.0 | Reference; possible replacement for more complex layouts | Native JSON UI interpretation with local descriptions. The initial data forms need few components, so use a smaller constrained runtime |

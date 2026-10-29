@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">生长 · Living Apps</string>
+    <string name="language_title">语言 / Language</string>
+    <string name="language_system">跟随系统</string>
+    <string name="language_description">选择菜单和系统控件的语言。应用名称、记录项与已有记录保留原文。</string>
+    <string name="nav_apps">应用</string>
+    <string name="nav_insights">生长</string>
+    <string name="about_version">生长 %1$s · Android 本地优先\n支持表单、记录、清单、打卡和统计类个人应用。\n支持在已安装应用的兼容功能上设计个人界面。\n生成描述须通过本机检查，不执行任意生成程序代码。</string>
+</resources>

@@ -1,5 +1,7 @@
 package dev.livingapps;
 
+import static dev.livingapps.core.Messages.tr;
+
 import android.app.*;
 import android.view.*;
 import android.widget.*;
@@ -24,9 +26,9 @@ final class ActionControls {
 
   private void error(Exception e) {
     new AlertDialog.Builder(activity)
-        .setTitle("动作尚未配置完整")
+        .setTitle(tr("动作尚未配置完整"))
         .setMessage(e.getMessage())
-        .setPositiveButton("知道了", null)
+        .setPositiveButton(tr("知道了"), null)
         .show();
   }
 
@@ -34,28 +36,28 @@ final class ActionControls {
     List<ActionSpec> actions = session.spec.actions();
     List<String> labels = new ArrayList<>();
     for (ActionSpec action : actions) labels.add(action.label);
-    labels.add("＋ 添加固定动作");
+    labels.add(tr("＋ 添加固定动作"));
     new AlertDialog.Builder(activity)
-        .setTitle("点击后新增一条记录")
+        .setTitle(tr("点击后新增一条记录"))
         .setItems(
             labels.toArray(new String[0]),
             (d, i) -> edit(i < actions.size() ? actions.get(i).id : null))
-        .setNegativeButton("返回", null)
+        .setNegativeButton(tr("返回"), null)
         .show();
   }
 
   void panel(LinearLayout parent, String id) {
-    parent.addView(ui.body("该按钮只会在使用或试用时，由你点击后新增一条记录。配置本身不会执行。"));
+    parent.addView(ui.body(tr("该按钮只会在使用或试用时，由你点击后新增一条记录。配置本身不会执行。")));
     ui.space(parent, 12);
-    parent.addView(ui.button("配置固定动作", false, () -> edit(id)));
+    parent.addView(ui.button(tr("配置固定动作"), false, () -> edit(id)));
     ui.space(parent, 8);
     parent.addView(
         ui.button(
-            "移除这个按钮",
+            tr("移除这个按钮"),
             false,
             () -> {
               try {
-                apply.run(withAction(id, null), "移除固定动作按钮；记录保留");
+                apply.run(withAction(id, null), tr("移除固定动作按钮；记录保留"));
                 session.selected = "app";
               } catch (Exception e) {
                 error(e);
@@ -88,10 +90,10 @@ final class ActionControls {
     JSONObject values = existing == null ? J.obj() : existing.optJSONObject("values");
     LinearLayout body = ui.col();
     body.setPadding(ui.dp(20), ui.dp(8), ui.dp(20), ui.dp(12));
-    body.addView(ui.body("能力：你点击按钮后，在本机新增一条配置好的记录。无脚本、无联网、无自动后台执行。"));
+    body.addView(ui.body(tr("能力：你点击按钮后，在本机新增一条配置好的记录。无脚本、无联网、无自动后台执行。")));
     ui.space(body, 12);
-    body.addView(ui.text("按钮名称", 13, Ui.INK, true));
-    EditText label = ui.input("如：记一杯水", false);
+    body.addView(ui.text(tr("按钮名称"), 13, Ui.INK, true));
+    EditText label = ui.input(tr("如：记一杯水"), false);
     label.setText(existing == null ? "" : existing.optString("label"));
     label.setTag("action-label");
     body.addView(label);
@@ -110,7 +112,7 @@ final class ActionControls {
               "$today".equals(value) ? java.time.LocalDate.now().toString() : value,
               true));
       if (field.type.equals("date")) {
-        Switch dynamic = ui.toggle("“" + field.label + "”随点击当天变化", today);
+        Switch dynamic = ui.toggle("“" + field.label + tr("”随点击当天变化"), today);
         dates.put(field.id, dynamic);
         body.addView(dynamic);
         ui.space(body, 10);
@@ -124,10 +126,10 @@ final class ActionControls {
             : existing.optString("id");
     AlertDialog dialog =
         new AlertDialog.Builder(activity)
-            .setTitle(existing == null ? "添加固定动作" : "配置固定动作")
+            .setTitle(existing == null ? tr("添加固定动作") : tr("配置固定动作"))
             .setView(scroll)
-            .setNegativeButton("稍后再改", null)
-            .setPositiveButton("加入草稿，不执行", null)
+            .setNegativeButton(tr("稍后再改"), null)
+            .setPositiveButton(tr("加入草稿，不执行"), null)
             .create();
     dialog.setOnShowListener(
         d ->
@@ -157,7 +159,8 @@ final class ActionControls {
                                 "values",
                                 configured);
                         apply.run(
-                            withAction(actionId, action), "配置固定动作：" + action.optString("label"));
+                            withAction(actionId, action),
+                            tr("配置固定动作：") + action.optString("label"));
                         dialog.dismiss();
                       } catch (Exception e) {
                         error(e);

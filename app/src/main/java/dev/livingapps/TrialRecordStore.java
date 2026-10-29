@@ -1,5 +1,7 @@
 package dev.livingapps;
 
+import static dev.livingapps.core.Messages.tr;
+
 import dev.livingapps.core.*;
 import java.util.*;
 import org.json.*;
@@ -37,9 +39,9 @@ public final class TrialRecordStore {
         row.data = merged;
         found = true;
       }
-    if (id != null && !found) throw new IllegalArgumentException("临时记录已不存在");
+    if (id != null && !found) throw new IllegalArgumentException(tr("临时记录已不存在"));
     if (id == null) {
-      if (rows.size() >= 100) throw new IllegalArgumentException("试用记录最多 100 条，可清空后继续");
+      if (rows.size() >= 100) throw new IllegalArgumentException(tr("试用记录最多 100 条，可清空后继续"));
       Store.Entry row = new Store.Entry();
       row.id = UUID.randomUUID().toString();
       row.created = System.currentTimeMillis();
@@ -75,7 +77,7 @@ public final class TrialRecordStore {
     JSONArray array = new JSONArray();
     for (Store.Entry e : rows) array.put(J.obj("id", e.id, "created", e.created, "data", e.data));
     if (array.toString().length() > 1_000_000)
-      throw new IllegalArgumentException("试用副本过大，请减少临时记录后继续");
+      throw new IllegalArgumentException(tr("试用副本过大，请减少临时记录后继续"));
     session.trial = array;
   }
 }

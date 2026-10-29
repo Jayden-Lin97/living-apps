@@ -1,5 +1,7 @@
 package dev.livingapps;
 
+import static dev.livingapps.core.Messages.tr;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.security.keystore.KeyGenParameterSpec;
@@ -48,14 +50,14 @@ public final class SecretVault {
                 cipher.doFinal(secret.trim().getBytes(java.nio.charset.StandardCharsets.UTF_8)),
                 Base64.NO_WRAP);
     if (!prefs.edit().putString("encrypted", value).commit())
-      throw new IllegalStateException("凭据保存失败");
+      throw new IllegalStateException(tr("凭据保存失败"));
   }
 
   public String read() throws Exception {
     String encrypted = prefs.getString("encrypted", "");
     if (encrypted.isEmpty()) return "";
     String[] parts = encrypted.split(":");
-    if (parts.length != 2) throw new IllegalStateException("凭据损坏，请重新设置");
+    if (parts.length != 2) throw new IllegalStateException(tr("凭据损坏，请重新设置"));
     Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
     cipher.init(
         Cipher.DECRYPT_MODE,

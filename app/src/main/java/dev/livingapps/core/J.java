@@ -1,5 +1,7 @@
 package dev.livingapps.core;
 
+import static dev.livingapps.core.Messages.tr;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -12,7 +14,7 @@ public final class J {
       for (int i = 0; i < pairs.length; i += 2) result.put((String) pairs[i], pairs[i + 1]);
       return result;
     } catch (Exception e) {
-      throw new IllegalArgumentException("JSON 数据无效", e);
+      throw new IllegalArgumentException(tr("JSON 数据无效"), e);
     }
   }
 
@@ -34,7 +36,7 @@ public final class J {
     try {
       return new JSONObject(text);
     } catch (Exception e) {
-      throw new IllegalArgumentException("返回内容不是有效 JSON", e);
+      throw new IllegalArgumentException(tr("返回内容不是有效 JSON"), e);
     }
   }
 

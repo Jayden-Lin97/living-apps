@@ -1,5 +1,7 @@
 package dev.livingapps.core;
 
+import static dev.livingapps.core.Messages.tr;
+
 import java.util.*;
 import org.json.*;
 
@@ -11,7 +13,7 @@ public final class EditSession {
       screen = "form",
       tab = "quick",
       prompt = "",
-      status = "草稿已保存在本机";
+      status = tr("草稿已保存在本机");
   public int panel = 1;
   public long revision, storageRevision;
   public AppSpec base, spec;
@@ -35,7 +37,7 @@ public final class EditSession {
     appId = json.optString("appId");
     baseVersion = json.optString("baseVersion");
     if (id.isEmpty() || appId.isEmpty() || baseVersion.isEmpty())
-      throw new IllegalArgumentException("草稿身份不完整");
+      throw new IllegalArgumentException(tr("草稿身份不完整"));
     base = AppSpec.parse(json.optJSONObject("base").toString());
     spec = AppSpec.parse(json.optJSONObject("spec").toString());
     revision = json.optLong("revision");
@@ -58,7 +60,7 @@ public final class EditSession {
   }
 
   public static EditSession parse(String value) {
-    if (value.length() > 4_000_000) throw new IllegalArgumentException("草稿过大");
+    if (value.length() > 4_000_000) throw new IllegalArgumentException(tr("草稿过大"));
     return new EditSession(J.parse(value));
   }
 
@@ -136,7 +138,7 @@ public final class EditSession {
     List<String> errors = VersionPolicy.errors(base, next);
     if (!errors.isEmpty()) throw new IllegalArgumentException(String.join("\n", errors));
     if (EditChanges.between(spec, next).isEmpty()) {
-      status = "没有新的修改";
+      status = tr("没有新的修改");
       return;
     }
     undo.add(J.obj("spec", spec.json(), "reason", reason));
@@ -145,7 +147,7 @@ public final class EditSession {
     spec = next;
     revision++;
     checkSelection();
-    status = reason + " · 已存草稿";
+    status = reason + tr(" · 已存草稿");
   }
 
   public void undo() {
@@ -155,7 +157,7 @@ public final class EditSession {
     spec = AppSpec.parse(row.optJSONObject("spec").toString());
     revision++;
     checkSelection();
-    status = "已撤销：" + row.optString("reason");
+    status = tr("已撤销：") + row.optString("reason");
   }
 
   public void redo() {
@@ -165,7 +167,7 @@ public final class EditSession {
     spec = AppSpec.parse(row.optJSONObject("spec").toString());
     revision++;
     checkSelection();
-    status = "已重做：" + row.optString("reason");
+    status = tr("已重做：") + row.optString("reason");
   }
 
   public void rebase(String version, AppSpec latest, AppSpec merged) {
@@ -179,7 +181,7 @@ public final class EditSession {
     revision++;
     pending = null;
     checkSelection();
-    status = "已基于最新版本合并，尚未发布";
+    status = tr("已基于最新版本合并，尚未发布");
   }
 
   public void message(String role, String text) {
@@ -231,7 +233,7 @@ public final class EditSession {
   public AppSpec field(String fieldId, String key, Object value) {
     JSONObject raw = spec.json();
     JSONObject field = EditChanges.fields(raw).get(fieldId);
-    if (field == null) throw new IllegalArgumentException("该记录项已不存在");
+    if (field == null) throw new IllegalArgumentException(tr("该记录项已不存在"));
     if (key.equals("group") || key.equals("hidden")) J.put(raw, "schemaVersion", 2);
     if (value == null) field.remove(key);
     else J.put(field, key, value);

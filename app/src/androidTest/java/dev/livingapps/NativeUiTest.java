@@ -18,6 +18,7 @@ import org.junit.runner.RunWith;
 /** Exercise the actual native UI through Android accessibility, including dialogs. */
 @RunWith(AndroidJUnit4.class)
 public class NativeUiTest {
+  @org.junit.Rule public final ChineseUiRule language = new ChineseUiRule();
   private final Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
   private final UiAutomation automation = instrumentation.getUiAutomation();
 

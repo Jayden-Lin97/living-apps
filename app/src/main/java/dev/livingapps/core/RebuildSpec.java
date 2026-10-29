@@ -1,5 +1,7 @@
 package dev.livingapps.core;
 
+import static dev.livingapps.core.Messages.tr;
+
 import java.util.*;
 import org.json.*;
 
@@ -10,51 +12,52 @@ public final class RebuildSpec {
   public RebuildSpec(JSONObject source) {
     data = J.parse(source.toString());
     keys(data, "schema,name,package,version,certificate,dark,compact,widgets");
-    if (!(data.opt("schema") instanceof Number) || data.optDouble("schema") != 1) bad("不支持的重构版本");
+    if (!(data.opt("schema") instanceof Number) || data.optDouble("schema") != 1)
+      bad(tr("不支持的重构版本"));
     string(data, "name", 60, false);
     String pkg = string(data, "package", 200, false);
-    if (!pkg.matches("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+")) bad("应用标识无效");
+    if (!pkg.matches("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+")) bad(tr("应用标识无效"));
     if (!(data.opt("version") instanceof Number)
         || data.optLong("version") < 0
         || !Double.isFinite(data.optDouble("version"))
-        || data.optDouble("version") != (double) data.optLong("version")) bad("应用版本无效");
-    if (!string(data, "certificate", 64, false).matches("[0-9a-f]{64}")) bad("应用签名无效");
+        || data.optDouble("version") != (double) data.optLong("version")) bad(tr("应用版本无效"));
+    if (!string(data, "certificate", 64, false).matches("[0-9a-f]{64}")) bad(tr("应用签名无效"));
     bool(data, "dark");
     bool(data, "compact");
     JSONArray widgets = data.optJSONArray("widgets");
-    if (widgets == null || widgets.length() > 24) bad("最多组合 24 个组件");
+    if (widgets == null || widgets.length() > 24) bad(tr("最多组合 24 个组件"));
     Set<String> ids = new HashSet<>();
     for (int i = 0; i < widgets.length(); i++) {
       JSONObject w = widgets.optJSONObject(i);
-      if (w == null) bad("组件无效");
+      if (w == null) bad(tr("组件无效"));
       keys(w, "id,label,kind,selector,steps,page,interactive");
       String id = string(w, "id", 50, false);
-      if (!id.matches("[a-zA-Z][a-zA-Z0-9_]*") || !ids.add(id)) bad("组件 ID 无效或重复");
+      if (!id.matches("[a-zA-Z][a-zA-Z0-9_]*") || !ids.add(id)) bad(tr("组件 ID 无效或重复"));
       string(w, "label", 60, false);
       String kind = string(w, "kind", 20, false);
       if (kind.equals("read") || kind.equals("list")) {
         selector(w.optJSONObject("selector"));
         page(w);
         if (kind.equals("list")) bool(w, "interactive");
-        else if (w.has("interactive")) bad("信息组件不能点击");
-        if (w.has("steps")) bad("信息组件不执行动作");
+        else if (w.has("interactive")) bad(tr("信息组件不能点击"));
+        if (w.has("steps")) bad(tr("信息组件不执行动作"));
       } else if (kind.equals("action") || kind.equals("input")) {
-        if (w.has("selector") || w.has("page") || w.has("interactive")) bad("动作必须使用步骤");
+        if (w.has("selector") || w.has("page") || w.has("interactive")) bad(tr("动作必须使用步骤"));
         JSONArray steps = w.optJSONArray("steps");
-        if (steps == null || steps.length() < 1 || steps.length() > 8) bad("每个动作需要 1–8 个步骤");
+        if (steps == null || steps.length() < 1 || steps.length() > 8) bad(tr("每个动作需要 1–8 个步骤"));
         int inputs = 0;
         for (int s = 0; s < steps.length(); s++) {
           JSONObject step = steps.optJSONObject(s);
-          if (step == null) bad("步骤无效");
+          if (step == null) bad(tr("步骤无效"));
           keys(step, "op,selector,page");
           String op = step.optString("op");
-          if (!Arrays.asList("click", "input", "scroll").contains(op)) bad("不支持的动作");
+          if (!Arrays.asList("click", "input", "scroll").contains(op)) bad(tr("不支持的动作"));
           if (op.equals("input")) inputs++;
           selector(step.optJSONObject("selector"));
           page(step);
         }
-        if (inputs > 1 || inputs != (kind.equals("input") ? 1 : 0)) bad("输入组件需要且仅有一个输入步骤");
-      } else bad("未知组件");
+        if (inputs > 1 || inputs != (kind.equals("input") ? 1 : 0)) bad(tr("输入组件需要且仅有一个输入步骤"));
+      } else bad(tr("未知组件"));
     }
   }
 
@@ -115,7 +118,7 @@ public final class RebuildSpec {
     JSONArray list = widgets();
     for (int i = 0; i < list.length(); i++)
       if (list.optJSONObject(i).optString("id").equals(id)) return list.optJSONObject(i);
-    throw new IllegalArgumentException("组件不存在");
+    throw new IllegalArgumentException(tr("组件不存在"));
   }
 
   public RebuildSpec with(String key, Object value) {
@@ -126,17 +129,17 @@ public final class RebuildSpec {
 
   public void assertTarget(String pkg, long version, String certificate) {
     if (!pkg().equals(pkg) || version() != version || !certificate().equals(certificate))
-      bad("原应用已更新或签名不匹配，请重新检查适配");
+      bad(tr("原应用已更新或签名不匹配，请重新检查适配"));
   }
 
   public static void selector(JSONObject s) {
-    if (s == null) bad("缺少控件定位");
+    if (s == null) bad(tr("缺少控件定位"));
     keys(s, "viewId,text,description,className");
     String id = string(s, "viewId", 240, true),
         text = string(s, "text", 180, true),
         desc = string(s, "description", 180, true);
     string(s, "className", 160, false);
-    if (id.isEmpty() && text.isEmpty() && desc.isEmpty()) bad("控件缺少可重复定位的信息");
+    if (id.isEmpty() && text.isEmpty() && desc.isEmpty()) bad(tr("控件缺少可重复定位的信息"));
   }
 
   public static boolean matches(JSONObject s, JSONObject node) {
@@ -150,10 +153,10 @@ public final class RebuildSpec {
     int found = -1;
     for (int i = 0; i < nodes.size(); i++)
       if (matches(s, nodes.get(i))) {
-        if (found != -1) bad("匹配到多个控件，已停止；请重新示范");
+        if (found != -1) bad(tr("匹配到多个控件，已停止；请重新示范"));
         found = i;
       }
-    if (found < 0) bad("当前页面找不到目标，请回原应用打开对应页面");
+    if (found < 0) bad(tr("当前页面找不到目标，请回原应用打开对应页面"));
     return found;
   }
 
@@ -185,7 +188,7 @@ public final class RebuildSpec {
   }
 
   private static void page(JSONObject o) {
-    if (!string(o, "page", 64, false).matches("[0-9a-f]{64}")) bad("缺少页面结构基线");
+    if (!string(o, "page", 64, false).matches("[0-9a-f]{64}")) bad(tr("缺少页面结构基线"));
   }
 
   public static String pageSignature(List<JSONObject> nodes) {
@@ -217,22 +220,22 @@ public final class RebuildSpec {
   }
 
   private static void bool(JSONObject o, String key) {
-    if (!(o.opt(key) instanceof Boolean)) bad("布尔值无效：" + key);
+    if (!(o.opt(key) instanceof Boolean)) bad(tr("布尔值无效：") + key);
   }
 
   private static String string(JSONObject o, String key, int max, boolean empty) {
     Object v = o.opt(key);
-    if (!(v instanceof String)) bad("文本无效：" + key);
+    if (!(v instanceof String)) bad(tr("文本无效：") + key);
     String s = (String) v;
     if (s.length() > max || (!empty && s.trim().isEmpty()) || s.indexOf('\u0000') >= 0)
-      bad("文本长度无效：" + key);
+      bad(tr("文本长度无效：") + key);
     return s;
   }
 
   private static void keys(JSONObject o, String allowed) {
     Set<String> names = new HashSet<>(Arrays.asList(allowed.split(",")));
     for (Iterator<String> it = o.keys(); it.hasNext(); )
-      if (!names.contains(it.next())) bad("包含未允许的能力");
+      if (!names.contains(it.next())) bad(tr("包含未允许的能力"));
   }
 
   private static void bad(String message) {

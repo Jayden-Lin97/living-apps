@@ -7,6 +7,18 @@ import org.json.*;
 import org.junit.Test;
 
 public class RebuildSpecTest {
+  private final java.util.Locale previousTestLocale = java.util.Locale.getDefault();
+
+  @org.junit.Before
+  public void selectChineseCopy() {
+    java.util.Locale.setDefault(java.util.Locale.SIMPLIFIED_CHINESE);
+  }
+
+  @org.junit.After
+  public void restoreCopyLocale() {
+    java.util.Locale.setDefault(previousTestLocale);
+  }
+
   private static final String CERT = "a".repeat(64);
 
   private JSONObject selector() {

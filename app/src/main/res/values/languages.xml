@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Living Apps</string>
+    <string name="language_title">Language / 语言</string>
+    <string name="language_system">Follow system</string>
+    <string name="language_description">Choose the language for menus and system controls. App names, fields and records keep their original text.</string>
+    <string name="nav_apps">Apps</string>
+    <string name="nav_insights">Insights</string>
+    <string name="about_version">Living Apps %1$s · Local-first Android\nPersonal apps for forms, records, lists, check-ins and statistics.\nPersonal interfaces over compatible parts of installed apps.\nGenerated definitions pass local checks. Arbitrary generated program code is never executed.</string>
+</resources>

@@ -19,7 +19,7 @@ import org.robolectric.annotation.*;
 import org.robolectric.shadows.ShadowAlertDialog;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = 35, qualifiers = "w360dp-h720dp-port-xxhdpi")
+@Config(sdk = 35, qualifiers = "zh-rCN-w360dp-h720dp-port-xxhdpi")
 public class EditorRuntimeTest {
   private Store store;
   private String id;
@@ -315,7 +315,7 @@ public class EditorRuntimeTest {
   }
 
   @Test
-  @Config(qualifiers = "w320dp-h640dp-port-xxhdpi")
+  @Config(qualifiers = "zh-rCN-w320dp-h640dp-port-xxhdpi")
   @GraphicsMode(GraphicsMode.Mode.NATIVE)
   public void smallScreenLargeTextKeepsEditorActionsAndScrollablePanel() throws Exception {
     android.content.res.Resources resources = RuntimeEnvironment.getApplication().getResources();

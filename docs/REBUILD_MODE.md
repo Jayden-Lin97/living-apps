@@ -2,7 +2,7 @@
 
 **English** | [简体中文](REBUILD_MODE.zh-CN.md)
 
-The Android development build adds **Reconstruct an existing app** alongside creating a standalone personal app. Living draws the interface; the installed source app performs the business operations. This is a common engine with user-selected bindings, not a promise that every application or feature is compatible. The Android interface remains Chinese.
+The Android development build adds **Reconstruct an existing app** alongside creating a standalone personal app. Living draws the interface; the installed source app performs the business operations. This is a common engine with user-selected bindings, not a promise that every application or feature is compatible. The Android controls support English and Simplified Chinese; original-app content and saved component names retain their original text.
 
 ## Use the mode
 

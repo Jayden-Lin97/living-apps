@@ -2,7 +2,7 @@
 
 **English** | [简体中文](DEVELOPMENT_PLAN.zh-CN.md)
 
-Updated 2026-10-29. Version 0.3.0 adds installed-app reconstruction alongside the native app-editing workspace; device acceptance remains separately tracked.
+Updated 2026-10-29. Version 0.3.1 adds on-device English/Simplified Chinese language selection to the native workspace and installed-app reconstruction; device acceptance remains separately tracked.
 
 ## Product scope
 
@@ -15,6 +15,7 @@ Initial loop: library → creation/template → offline use and records → on-d
 | Work | Location | Reason and data boundary |
 |---|---|---|
 | Sub-app layout and forms | Phone | Native components interpret validated JSON; no remote webpage dependency |
+| UI language preference, catalog lookup and configuration refresh | Phone | System/local locale settings and bundled copy only; saved definitions and records are not translated; no API or server |
 | Record CRUD, statistics, search | Phone SQLite | Personal records are not uploaded |
 | Usage events, timing, errors, aggregation | Phone | Event name, version and duration only; no typed content |
 | Recognize frequent entry points and low-risk rules | Phone | Deterministic rules suffice, without LLM costs |

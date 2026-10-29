@@ -1,5 +1,7 @@
 package dev.livingapps.core;
 
+import static dev.livingapps.core.Messages.tr;
+
 import java.util.*;
 import org.json.JSONObject;
 
@@ -97,14 +99,18 @@ public final class ReflectionEngine {
       out.add(
           new Suggestion(
               "quick_add",
-              "最近在 " + s.days.size() + " 天内完成了 " + s.saves + " 次记录。增加首页快速记录入口，可以少切换一次页面。",
+              tr("最近在 ")
+                  + s.days.size()
+                  + tr(" 天内完成了 ")
+                  + s.saves
+                  + tr(" 次记录。增加首页快速记录入口，可以少切换一次页面。"),
               spec.with("quickAdd", true),
               true));
     if (!spec.startScreen().equals("stats") && s.stats >= 6 && s.stats > s.saves * 2)
       out.add(
           new Suggestion(
               "start_stats",
-              "你查看统计的次数（" + s.stats + " 次）明显多于新增记录。可以默认打开统计，原有页面仍可随时切换。",
+              tr("你查看统计的次数（") + s.stats + tr(" 次）明显多于新增记录。可以默认打开统计，原有页面仍可随时切换。"),
               spec.with("startScreen", "stats"),
               false));
     return out;
@@ -112,13 +118,16 @@ public final class ReflectionEngine {
 
   public static String evaluation(Summary before, Summary after) {
     if (before.durations.size() < 5 || after.durations.size() < 5)
-      return "记录耗时样本不足：更新前 "
+      return tr("记录耗时样本不足：更新前 ")
           + before.durations.size()
-          + " 次，更新后 "
+          + tr(" 次，更新后 ")
           + after.durations.size()
-          + " 次；各满 5 次后展示观察结果。";
+          + tr(" 次；各满 5 次后展示观察结果。");
     long b = before.medianMillis(), a = after.medianMillis();
     return String.format(
-        Locale.CHINA, "记录耗时中位数：更新前 %.1f 秒 → 更新后 %.1f 秒。仅为使用观察，任务差异也会影响结果。", b / 1000.0, a / 1000.0);
+        Locale.CHINA,
+        tr("记录耗时中位数：更新前 %.1f 秒 → 更新后 %.1f 秒。仅为使用观察，任务差异也会影响结果。"),
+        b / 1000.0,
+        a / 1000.0);
   }
 }

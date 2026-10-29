@@ -89,4 +89,28 @@ public final class Templates {
             field("thought", "随想", "text", false),
             field("date", "日期", "date", true)));
   }
+
+  /** Localize freshly created built-ins only. Never call this on a saved user definition. */
+  public static List<AppSpec> localized() {
+    List<AppSpec> result = new java.util.ArrayList<>();
+    for (AppSpec original : all()) {
+      JSONObject spec = original.json();
+      for (String key : new String[] {"name", "description", "unit"})
+        J.put(spec, key, Messages.tr(spec.optString(key)));
+      org.json.JSONArray fields = spec.optJSONArray("fields");
+      for (int i = 0; i < fields.length(); i++) {
+        JSONObject field = fields.optJSONObject(i);
+        J.put(field, "label", Messages.tr(field.optString("label")));
+        org.json.JSONArray options = field.optJSONArray("options");
+        if (options != null) {
+          org.json.JSONArray localizedOptions = J.arr();
+          for (int j = 0; j < options.length(); j++)
+            localizedOptions.put(Messages.tr(options.optString(j)));
+          J.put(field, "options", localizedOptions);
+        }
+      }
+      result.add(AppSpec.parse(spec.toString()));
+    }
+    return result;
+  }
 }

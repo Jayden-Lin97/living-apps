@@ -1,5 +1,7 @@
 package dev.livingapps;
 
+import static dev.livingapps.core.Messages.tr;
+
 import android.content.*;
 import android.content.pm.*;
 import android.os.Build;
@@ -44,7 +46,7 @@ final class RebuildTarget {
           digest,
           Build.VERSION.SDK_INT >= 28 ? info.getLongVersionCode() : info.versionCode);
     } catch (Exception e) {
-      throw new IllegalStateException("原应用不可用或无法检查签名");
+      throw new IllegalStateException(tr("原应用不可用或无法检查签名"));
     }
   }
 

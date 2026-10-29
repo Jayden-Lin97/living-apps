@@ -1,4 +1,4 @@
 <resources>
-    <string name="rebuild_service_name">Living Apps · 重构已有应用</string>
-    <string name="rebuild_service_description">仅在你启动的重构会话中，读取所选应用页面的文字与控件，并按你点击的固定流程执行点击、输入和滚动。页面与输入不默认上传；登录、支付和受保护页面交回原应用。你可随时停止会话或关闭此服务。</string>
+    <string name="rebuild_service_name">Living Apps · Rebuild an app</string>
+    <string name="rebuild_service_description">Only during a reconstruction session you start, read text and controls from the selected app and run the fixed click, input and scroll steps you trigger. Pages and input are not uploaded by default. Use the original app for login, payments and protected pages. You can stop the session or turn this service off at any time.</string>
 </resources>

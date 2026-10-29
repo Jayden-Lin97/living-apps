@@ -1,5 +1,7 @@
 package dev.livingapps;
 
+import static dev.livingapps.core.Messages.tr;
+
 import android.app.*;
 import android.graphics.Color;
 import android.text.*;
@@ -39,9 +41,9 @@ final class EditorControls {
 
   private void error(Exception error) {
     new AlertDialog.Builder(activity)
-        .setTitle("请调整这项设置")
+        .setTitle(tr("请调整这项设置"))
         .setMessage(error.getMessage())
-        .setPositiveButton("知道了", null)
+        .setPositiveButton(tr("知道了"), null)
         .show();
   }
 
@@ -115,17 +117,17 @@ final class EditorControls {
   }
 
   private void fieldPanel(LinearLayout parent, AppSpec.Field field) {
-    parent.addView(ui.text("显示名称", 12, Ui.INK, true));
+    parent.addView(ui.text(tr("显示名称"), 12, Ui.INK, true));
     ui.space(parent, 6);
     LinearLayout row = ui.row();
     String key = "rename:" + field.id;
-    EditText name = input(key, field.label, "记录项名称", false);
+    EditText name = input(key, field.label, tr("记录项名称"), false);
     name.setSingleLine(true);
     row.addView(name, new LinearLayout.LayoutParams(0, -2, 1));
     ui.gap(row, 8);
     row.addView(
         ui.button(
-            "应用",
+            tr("应用"),
             true,
             () ->
                 execute(
@@ -135,31 +137,33 @@ final class EditorControls {
                       session.controls.remove(key);
                       return next;
                     },
-                    "调整“" + field.label + "”显示名称")));
+                    tr("调整“") + field.label + tr("”显示名称"))));
     parent.addView(row);
     ui.space(parent, 8);
     LinearLayout moves = ui.row();
     ui.weighted(
-        moves, ui.button("上移", false, () -> execute(() -> session.move(field.id, -1), "调整记录项顺序")));
+        moves,
+        ui.button(tr("上移"), false, () -> execute(() -> session.move(field.id, -1), tr("调整记录项顺序"))));
     ui.weighted(
-        moves, ui.button("下移", false, () -> execute(() -> session.move(field.id, 1), "调整记录项顺序")));
-    ui.weighted(moves, ui.button("更多设置", false, () -> fieldDialog(field.id, false)));
+        moves,
+        ui.button(tr("下移"), false, () -> execute(() -> session.move(field.id, 1), tr("调整记录项顺序"))));
+    ui.weighted(moves, ui.button(tr("更多设置"), false, () -> fieldDialog(field.id, false)));
     parent.addView(moves);
     ui.space(parent, 8);
-    parent.addView(ui.button("修改整个应用", false, selectApp));
+    parent.addView(ui.button(tr("修改整个应用"), false, selectApp));
   }
 
   private void appPanel(LinearLayout parent) {
     String key = "app:name";
-    parent.addView(ui.text("应用名称", 12, Ui.INK, true));
+    parent.addView(ui.text(tr("应用名称"), 12, Ui.INK, true));
     ui.space(parent, 6);
-    EditText name = input(key, session.spec.name(), "应用名称", false);
+    EditText name = input(key, session.spec.name(), tr("应用名称"), false);
     LinearLayout row = ui.row();
     row.addView(name, new LinearLayout.LayoutParams(0, -2, 1));
     ui.gap(row, 8);
     row.addView(
         ui.button(
-            "应用",
+            tr("应用"),
             true,
             () ->
                 execute(
@@ -168,28 +172,28 @@ final class EditorControls {
                       session.controls.remove(key);
                       return next;
                     },
-                    "调整应用名称")));
+                    tr("调整应用名称"))));
     parent.addView(row);
     ui.space(parent, 8);
     LinearLayout options = ui.row();
-    ui.weighted(options, ui.button("主题与图标", false, this::appearance));
-    ui.weighted(options, ui.button("首页与统计", false, this::navigation));
+    ui.weighted(options, ui.button(tr("主题与图标"), false, this::appearance));
+    ui.weighted(options, ui.button(tr("首页与统计"), false, this::navigation));
     parent.addView(options);
     ui.space(parent, 8);
-    Switch compact = ui.toggle("紧凑记录卡片", session.spec.compact());
+    Switch compact = ui.toggle(tr("紧凑记录卡片"), session.spec.compact());
     compact.setTag("editor-compact");
     compact.setOnCheckedChangeListener(
-        (v, checked) -> execute(() -> session.spec.with("compact", checked), "调整记录布局"));
+        (v, checked) -> execute(() -> session.spec.with("compact", checked), tr("调整记录布局")));
     parent.addView(compact);
-    Switch quick = ui.toggle("快速记录入口", session.spec.quickAdd());
+    Switch quick = ui.toggle(tr("快速记录入口"), session.spec.quickAdd());
     quick.setOnCheckedChangeListener(
-        (v, checked) -> execute(() -> session.spec.with("quickAdd", checked), "调整快速记录入口"));
+        (v, checked) -> execute(() -> session.spec.with("quickAdd", checked), tr("调整快速记录入口")));
     parent.addView(quick);
-    parent.addView(ui.action("添加记录项", "plus", false, this::addField));
+    parent.addView(ui.action(tr("添加记录项"), "plus", false, this::addField));
     ui.space(parent, 8);
     parent.addView(
         ui.action(
-            "固定动作 · 点击新增记录",
+            tr("固定动作 · 点击新增记录"),
             "plus",
             false,
             () -> new ActionControls(activity, ui, session, apply).manage()));
@@ -204,11 +208,12 @@ final class EditorControls {
     if (!adding && old == null) return;
     String prefix = adding ? "new:" : "config:" + id + ":";
     LinearLayout body = content();
-    body.addView(ui.body(adding ? "新增项会加入草稿；默认选填，不改变旧记录。" : "显示名称和填写方式可以调整；已发布的类型、标识和旧选项会保留。"));
-    label(body, "名称");
-    EditText label = input(prefix + "label", adding ? "" : old.label, "如：备注、心情", false);
+    body.addView(
+        ui.body(adding ? tr("新增项会加入草稿；默认选填，不改变旧记录。") : tr("显示名称和填写方式可以调整；已发布的类型、标识和旧选项会保留。")));
+    label(body, tr("名称"));
+    EditText label = input(prefix + "label", adding ? "" : old.label, tr("如：备注、心情"), false);
     body.addView(label);
-    String[] types = {"文本", "数字", "日期", "选项", "开关"},
+    String[] types = {tr("文本"), tr("数字"), tr("日期"), tr("选项"), tr("开关")},
         ids = {"text", "number", "date", "choice", "boolean"};
     Spinner type =
         ui.spinner(
@@ -217,19 +222,19 @@ final class EditorControls {
                 ? session.controls.optInt(prefix + "type", 0)
                 : Arrays.asList(ids).indexOf(old.type));
     if (adding) {
-      label(body, "记录内容类型");
+      label(body, tr("记录内容类型"));
       body.addView(type);
     } else {
       ui.space(body, 9);
-      body.addView(ui.tag("类型：" + types[Arrays.asList(ids).indexOf(old.type)]));
+      body.addView(ui.tag(tr("类型：") + types[Arrays.asList(ids).indexOf(old.type)]));
     }
-    label(body, "填写提示");
+    label(body, tr("填写提示"));
     EditText placeholder =
-        input(prefix + "placeholder", adding ? "" : old.placeholder, "选填", false);
+        input(prefix + "placeholder", adding ? "" : old.placeholder, tr("选填"), false);
     body.addView(placeholder);
     Switch required =
         ui.toggle(
-            "必填",
+            tr("必填"),
             session.controls.has(prefix + "required")
                 ? session.controls.optBoolean(prefix + "required")
                 : !adding && old.required);
@@ -239,12 +244,12 @@ final class EditorControls {
           save.run();
         });
     body.addView(required);
-    label(body, "分组名称");
-    EditText group = input(prefix + "group", adding ? "" : old.group, "选填，如：基本信息", false);
+    label(body, tr("分组名称"));
+    EditText group = input(prefix + "group", adding ? "" : old.group, tr("选填，如：基本信息"), false);
     body.addView(group);
     Switch hidden =
         ui.toggle(
-            "在表单和记录列表中隐藏",
+            tr("在表单和记录列表中隐藏"),
             session.controls.has(prefix + "hidden")
                 ? session.controls.optBoolean(prefix + "hidden")
                 : !adding && old.hidden);
@@ -254,7 +259,7 @@ final class EditorControls {
           save.run();
         });
     body.addView(hidden);
-    body.addView(ui.body("隐藏保留原数据；标题项不能隐藏，必填项需有合法默认值。显式统计仍可引用它。"));
+    body.addView(ui.body(tr("隐藏保留原数据；标题项不能隐藏，必填项需有合法默认值。显式统计仍可引用它。")));
     LinearLayout dynamic = ui.col();
     body.addView(dynamic);
     final EditText[] optionBox = {null}, defaultBox = {null};
@@ -264,12 +269,12 @@ final class EditorControls {
           dynamic.removeAllViews();
           String selected = ids[type.getSelectedItemPosition()];
           if (selected.equals("choice")) {
-            label(dynamic, "选项，每行一个；旧选项不能删除");
+            label(dynamic, tr("选项，每行一个；旧选项不能删除"));
             optionBox[0] =
                 input(
                     prefix + "options",
                     adding ? "" : String.join("\n", old.options),
-                    "如：开心\n平静\n疲惫",
+                    tr("如：开心\n平静\n疲惫"),
                     true);
             optionBox[0].setMinLines(3);
             dynamic.addView(optionBox[0]);
@@ -278,7 +283,7 @@ final class EditorControls {
               session.controls.has(prefix + "hasDefault")
                   ? session.controls.optBoolean(prefix + "hasDefault")
                   : !adding && old.defaultValue != null;
-          hasDefault[0] = ui.toggle("设置默认值", enabled);
+          hasDefault[0] = ui.toggle(tr("设置默认值"), enabled);
           hasDefault[0].setOnCheckedChangeListener(
               (v, c) -> {
                 J.put(session.controls, prefix + "hasDefault", c);
@@ -287,8 +292,8 @@ final class EditorControls {
           dynamic.addView(hasDefault[0]);
           String hint =
               selected.equals("boolean")
-                  ? "true 表示是，false 表示否"
-                  : selected.equals("date") ? "YYYY-MM-DD" : "缺少该项时使用的值";
+                  ? tr("true 表示是，false 表示否")
+                  : selected.equals("date") ? "YYYY-MM-DD" : tr("缺少该项时使用的值");
           defaultBox[0] =
               input(
                   prefix + "default",
@@ -297,7 +302,7 @@ final class EditorControls {
                   false);
           dynamic.addView(defaultBox[0]);
           ui.space(dynamic, 8);
-          dynamic.addView(ui.body("默认值只用于缺失项，不覆盖用户主动清空的值。新增必填项需有合法默认值，保存前会检查旧记录。"));
+          dynamic.addView(ui.body(tr("默认值只用于缺失项，不覆盖用户主动清空的值。新增必填项需有合法默认值，保存前会检查旧记录。")));
         };
     type.setOnItemSelectedListener(
         new android.widget.AdapterView.OnItemSelectedListener() {
@@ -312,10 +317,10 @@ final class EditorControls {
     render.run();
     AlertDialog dialog =
         new AlertDialog.Builder(activity)
-            .setTitle(adding ? "添加记录项" : "记录项设置")
+            .setTitle(adding ? tr("添加记录项") : tr("记录项设置"))
             .setView(scroll(body))
-            .setNegativeButton("稍后再改", null)
-            .setPositiveButton("应用到草稿", null)
+            .setNegativeButton(tr("稍后再改"), null)
+            .setPositiveButton(tr("应用到草稿"), null)
             .create();
     dialog.setOnShowListener(
         d ->
@@ -366,7 +371,7 @@ final class EditorControls {
                         J.put(raw, "fields", fields);
                         apply.run(
                             AppSpec.parse(raw.toString()),
-                            adding ? "新增记录项：" + next.optString("label") : "调整记录项设置");
+                            adding ? tr("新增记录项：") + next.optString("label") : tr("调整记录项设置"));
                         List<String> remove = new ArrayList<>();
                         session
                             .controls
@@ -393,27 +398,27 @@ final class EditorControls {
         if (Double.isFinite(n)) return n;
       } catch (Exception ignored) {
       }
-      throw new IllegalArgumentException("默认值须为有限数字");
+      throw new IllegalArgumentException(tr("默认值须为有限数字"));
     }
     if (type.equals("boolean")) {
       if (value.equals("true") || value.equals("是")) return true;
       if (value.equals("false") || value.equals("否")) return false;
-      throw new IllegalArgumentException("开关默认值请填写 true 或 false");
+      throw new IllegalArgumentException(tr("开关默认值请填写 true 或 false"));
     }
     return value;
   }
 
   private void appearance() {
     LinearLayout body = content();
-    label(body, "说明");
+    label(body, tr("说明"));
     EditText description =
-        input("appearance:description", session.spec.description(), "应用说明", true);
+        input("appearance:description", session.spec.description(), tr("应用说明"), true);
     description.setMinLines(2);
     body.addView(description);
-    label(body, "图标符号");
-    EditText symbol = input("appearance:icon", session.spec.icon(), "一个符号或 emoji", false);
+    label(body, tr("图标符号"));
+    EditText symbol = input("appearance:icon", session.spec.icon(), tr("一个符号或 emoji"), false);
     body.addView(symbol);
-    label(body, "主题颜色");
+    label(body, tr("主题颜色"));
     EditText color = input("appearance:accent", session.spec.accent(), "#1C3F35", false);
     body.addView(color);
     ui.space(body, 8);
@@ -426,10 +431,10 @@ final class EditorControls {
     body.addView(palette);
     AlertDialog dialog =
         new AlertDialog.Builder(activity)
-            .setTitle("主题与图标")
+            .setTitle(tr("主题与图标"))
             .setView(scroll(body))
-            .setNegativeButton("稍后再改", null)
-            .setPositiveButton("应用到草稿", null)
+            .setNegativeButton(tr("稍后再改"), null)
+            .setPositiveButton(tr("应用到草稿"), null)
             .create();
     dialog.setOnShowListener(
         d ->
@@ -444,7 +449,7 @@ final class EditorControls {
                                 .with("description", description.getText().toString().trim())
                                 .with("icon", symbol.getText().toString().trim())
                                 .with("accent", color.getText().toString().trim()),
-                            "调整应用主题与说明");
+                            tr("调整应用主题与说明"));
                         clearInputs("appearance:");
                         dialog.dismiss();
                       } catch (Exception e) {
@@ -458,10 +463,10 @@ final class EditorControls {
   private void navigation() {
     LinearLayout body = content();
     String[] screenIds = {"overview", "records", "stats"};
-    label(body, "默认打开");
+    label(body, tr("默认打开"));
     Spinner start =
         ui.spinner(
-            new String[] {"概览", "记录", "统计"},
+            new String[] {tr("概览"), tr("记录"), tr("统计")},
             Arrays.asList(screenIds).indexOf(session.spec.startScreen()));
     body.addView(start);
     List<String> ids = new ArrayList<>(),
@@ -469,7 +474,7 @@ final class EditorControls {
         numbers = new ArrayList<>(),
         numberLabels = new ArrayList<>();
     numbers.add("");
-    numberLabels.add("不显示累计");
+    numberLabels.add(tr("不显示累计"));
     for (AppSpec.Field f : session.spec.fields()) {
       ids.add(f.id);
       labels.add(f.label);
@@ -478,26 +483,26 @@ final class EditorControls {
         numberLabels.add(f.label);
       }
     }
-    label(body, "记录卡片的标题");
+    label(body, tr("记录卡片的标题"));
     Spinner title =
         ui.spinner(labels.toArray(new String[0]), ids.indexOf(session.spec.titleField()));
     body.addView(title);
-    label(body, "累计统计的数字项");
+    label(body, tr("累计统计的数字项"));
     Spinner metric =
         ui.spinner(
             numberLabels.toArray(new String[0]), numbers.indexOf(session.spec.metricField()));
     body.addView(metric);
-    label(body, "显示单位");
-    EditText unit = input("navigation:unit", session.spec.unit(), "如：元、页、ml", false);
+    label(body, tr("显示单位"));
+    EditText unit = input("navigation:unit", session.spec.unit(), tr("如：元、页、ml"), false);
     body.addView(unit);
     ui.space(body, 8);
-    body.addView(ui.body("这里只改变单位文字，不会换算或改写历史数值。"));
+    body.addView(ui.body(tr("这里只改变单位文字，不会换算或改写历史数值。")));
     AlertDialog dialog =
         new AlertDialog.Builder(activity)
-            .setTitle("首页与统计")
+            .setTitle(tr("首页与统计"))
             .setView(scroll(body))
-            .setNegativeButton("稍后再改", null)
-            .setPositiveButton("应用到草稿", null)
+            .setNegativeButton(tr("稍后再改"), null)
+            .setPositiveButton(tr("应用到草稿"), null)
             .create();
     dialog.setOnShowListener(
         d ->
@@ -513,7 +518,7 @@ final class EditorControls {
                                 .with("titleField", ids.get(title.getSelectedItemPosition()))
                                 .with("metricField", numbers.get(metric.getSelectedItemPosition()))
                                 .with("unit", unit.getText().toString().trim()),
-                            "调整默认入口和统计");
+                            tr("调整默认入口和统计"));
                         clearInputs("navigation:");
                         dialog.dismiss();
                       } catch (Exception e) {

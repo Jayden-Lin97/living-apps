@@ -1,5 +1,7 @@
 package dev.livingapps;
 
+import static dev.livingapps.core.Messages.tr;
+
 import dev.livingapps.core.*;
 import java.io.*;
 import java.net.*;
@@ -14,7 +16,7 @@ public final class ResponsesClient {
   public ResponsesClient(String base, String key) {
     this.base = ResponsesProtocol.validateBase(base);
     this.key = key;
-    if (key.trim().isEmpty()) throw new IllegalArgumentException("请先在设置中填写 API Key");
+    if (key.trim().isEmpty()) throw new IllegalArgumentException(tr("请先在设置中填写 API Key"));
   }
 
   public void cancel() {
@@ -41,14 +43,14 @@ public final class ResponsesClient {
       }
       int status = connection.getResponseCode();
       if (status < 200 || status >= 300)
-        throw new IOException("API 返回 HTTP " + status + "。请检查地址、模型及凭据；应用未改变。");
+        throw new IOException(tr("API 返回 HTTP ") + status + tr("。请检查地址、模型及凭据；应用未改变。"));
       try (InputStream input = connection.getInputStream();
           ByteArrayOutputStream out = new ByteArrayOutputStream()) {
         byte[] buffer = new byte[8192];
         int n;
         while ((n = input.read(buffer)) != -1) {
           if (Thread.currentThread().isInterrupted()) throw new InterruptedIOException();
-          if (out.size() + n > 2_000_000) throw new IOException("API 响应过大");
+          if (out.size() + n > 2_000_000) throw new IOException(tr("API 响应过大"));
           out.write(buffer, 0, n);
         }
         return out.toString(StandardCharsets.UTF_8.name());
@@ -62,7 +64,7 @@ public final class ResponsesClient {
   public List<String> models() throws Exception {
     JSONObject response = J.parse(request("/models", null));
     JSONArray data = response.optJSONArray("data");
-    if (data == null) throw new IOException("模型发现响应格式不正确");
+    if (data == null) throw new IOException(tr("模型发现响应格式不正确"));
     List<String> ids = new ArrayList<>();
     for (int i = 0; i < data.length(); i++) {
       JSONObject item = data.optJSONObject(i);
@@ -75,7 +77,16 @@ public final class ResponsesClient {
       throws Exception {
     return ResponsesProtocol.generated(
         ResponsesProtocol.outputText(
-            request("/responses", ResponsesProtocol.request(model, instructions, input))));
+            request(
+                "/responses",
+                ResponsesProtocol.request(model, instructions + languageInstruction(), input))));
+  }
+
+  static String languageInstruction() {
+    return "\nDefault language for newly authored labels and explanations: "
+        + (Messages.isChinese() ? "Simplified Chinese (zh-CN)" : "English (en)")
+        + ". Follow an explicit user language request. Preserve existing names, labels, options and"
+        + " user content unless explicitly asked to change them.";
   }
 
   public RebuildSpec rebuildLayout(String model, RebuildSpec baseline, String requirement)
@@ -86,7 +97,7 @@ public final class ResponsesClient {
                 "/responses",
                 ResponsesProtocol.request(
                     model,
-                    RebuildLayout.INSTRUCTIONS,
+                    RebuildLayout.INSTRUCTIONS + languageInstruction(),
                     RebuildLayout.context(baseline, requirement))));
     return RebuildLayout.apply(baseline, result);
   }

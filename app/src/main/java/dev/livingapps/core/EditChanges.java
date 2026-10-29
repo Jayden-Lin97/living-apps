@@ -1,5 +1,7 @@
 package dev.livingapps.core;
 
+import static dev.livingapps.core.Messages.tr;
+
 import java.util.*;
 import org.json.*;
 
@@ -22,10 +24,10 @@ public final class EditChanges {
 
     public String description() {
       if (path.equals("app/actions")) return actionDescription(before, after);
-      if (path.equals("app/schemaVersion")) return "调整应用支持的分组、隐藏或固定动作能力";
-      if (path.equals("order")) return "调整记录项顺序";
+      if (path.equals("app/schemaVersion")) return tr("调整应用支持的分组、隐藏或固定动作能力");
+      if (path.equals("order")) return tr("调整记录项顺序");
       if (path.startsWith("field/") && path.split("/").length == 2)
-        return (present ? "新增记录项：" : "移除未发布记录项：") + label;
+        return (present ? tr("新增记录项：") : tr("移除未发布记录项：")) + label;
       return label + "：" + value(before) + " → " + value(after);
     }
   }
@@ -51,21 +53,21 @@ public final class EditChanges {
       JSONObject old = a.get(id), next = b.get(id);
       if (same(old, next)) continue;
       if (next == null) {
-        lines.add("移除固定动作“" + old.optString("label") + "”（保留记录）");
+        lines.add(tr("移除固定动作“") + old.optString("label") + tr("”（保留记录）"));
         continue;
       }
       String name = next.optString("label");
-      if (old == null) lines.add("新增固定动作“" + name + "”：点击新增 1 条记录");
+      if (old == null) lines.add(tr("新增固定动作“") + name + tr("”：点击新增 1 条记录"));
       else if (!old.optString("label").equals(name))
-        lines.add("固定动作名称：" + old.optString("label") + " → " + name);
+        lines.add(tr("固定动作名称：") + old.optString("label") + " → " + name);
       JSONObject left = old == null ? J.obj() : old.optJSONObject("values"),
           right = next.optJSONObject("values");
       for (String key : keys(left, right))
         if (!same(left.opt(key), right.opt(key)))
           lines.add(
-              "动作“"
+              tr("动作“")
                   + name
-                  + "”预设 "
+                  + tr("”预设 ")
                   + key
                   + "："
                   + value(left.opt(key))
@@ -100,8 +102,8 @@ public final class EditChanges {
   }
 
   public static String value(Object value) {
-    if (value == null || value == JSONObject.NULL) return "未设置";
-    if (value instanceof Boolean) return (Boolean) value ? "开启" : "关闭";
+    if (value == null || value == JSONObject.NULL) return tr("未设置");
+    if (value instanceof Boolean) return (Boolean) value ? tr("开启") : tr("关闭");
     String text = String.valueOf(value);
     return text.length() > 80 ? text.substring(0, 80) + "…" : text;
   }
@@ -130,29 +132,29 @@ public final class EditChanges {
   private static String rootLabel(String k) {
     switch (k) {
       case "name":
-        return "应用名称";
+        return tr("应用名称");
       case "description":
-        return "应用说明";
+        return tr("应用说明");
       case "icon":
-        return "应用图标";
+        return tr("应用图标");
       case "accent":
-        return "主题颜色";
+        return tr("主题颜色");
       case "startScreen":
-        return "默认首页";
+        return tr("默认首页");
       case "quickAdd":
-        return "快速记录入口";
+        return tr("快速记录入口");
       case "compact":
-        return "紧凑布局";
+        return tr("紧凑布局");
       case "titleField":
-        return "列表标题来源";
+        return tr("列表标题来源");
       case "metricField":
-        return "统计记录项";
+        return tr("统计记录项");
       case "unit":
-        return "显示单位";
+        return tr("显示单位");
       case "actions":
-        return "固定动作";
+        return tr("固定动作");
       case "schemaVersion":
-        return "应用能力格式";
+        return tr("应用能力格式");
       default:
         return k;
     }
@@ -161,21 +163,21 @@ public final class EditChanges {
   private static String propertyLabel(String k) {
     switch (k) {
       case "label":
-        return "显示名称";
+        return tr("显示名称");
       case "placeholder":
-        return "填写提示";
+        return tr("填写提示");
       case "required":
-        return "必填设置";
+        return tr("必填设置");
       case "defaultValue":
-        return "默认值";
+        return tr("默认值");
       case "options":
-        return "可选内容";
+        return tr("可选内容");
       case "type":
-        return "类型";
+        return tr("类型");
       case "group":
-        return "分组";
+        return tr("分组");
       case "hidden":
-        return "隐藏设置";
+        return tr("隐藏设置");
       default:
         return k;
     }
@@ -212,7 +214,8 @@ public final class EditChanges {
                   next.opt(k),
                   next.has(k)));
     }
-    if (!same(order(a), order(b))) out.add(new Change("order", "记录项顺序", order(a), order(b), true));
+    if (!same(order(a), order(b)))
+      out.add(new Change("order", tr("记录项顺序"), order(a), order(b), true));
     return out;
   }
 
@@ -277,7 +280,7 @@ public final class EditChanges {
         else map.remove(id);
       } else {
         JSONObject f = map.get(id);
-        if (f == null) throw new IllegalArgumentException("修改目标已不存在");
+        if (f == null) throw new IllegalArgumentException(tr("修改目标已不存在"));
         if (c.present) J.put(f, parts[2], c.after);
         else f.remove(parts[2]);
       }
@@ -353,7 +356,7 @@ public final class EditChanges {
       }
       if (damaged) invalid++;
     }
-    if (invalid > 0) problems.add(invalid + " 条已有记录无法满足新设置，请先解决必填项、默认值或选项问题；记录尚未改变");
+    if (invalid > 0) problems.add(invalid + tr(" 条已有记录无法满足新设置，请先解决必填项、默认值或选项问题；记录尚未改变"));
     return new Impact(records.size(), invalid, problems);
   }
 }

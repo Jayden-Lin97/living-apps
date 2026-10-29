@@ -1,5 +1,7 @@
 package dev.livingapps;
 
+import static dev.livingapps.core.Messages.tr;
+
 import android.app.*;
 import android.graphics.Color;
 import android.text.*;
@@ -74,13 +76,13 @@ final class RuntimeRenderer {
     ui.space(parent, 6);
     Supplier<Object> reader;
     if (field.type.equals("boolean")) {
-      Switch toggle = ui.toggle("是 / 否", Boolean.TRUE.equals(value));
+      Switch toggle = ui.toggle(tr("是 / 否"), Boolean.TRUE.equals(value));
       toggle.setTag(field.id);
       parent.addView(toggle);
       reader = toggle::isChecked;
     } else if (field.type.equals("choice")) {
       List<String> choices = new ArrayList<>();
-      choices.add("请选择");
+      choices.add(tr("请选择"));
       choices.addAll(field.options);
       Spinner spinner =
           ui.spinner(
@@ -188,7 +190,7 @@ final class RuntimeRenderer {
     LinearLayout top = ui.row();
     TextView heading =
         ui.text(
-            title == null || String.valueOf(title).isEmpty() ? "未命名记录" : String.valueOf(title),
+            title == null || String.valueOf(title).isEmpty() ? tr("未命名记录") : String.valueOf(title),
             16,
             Ui.INK,
             true);
@@ -217,7 +219,7 @@ final class RuntimeRenderer {
       if (value != null && !String.valueOf(value).isEmpty()) {
         details.add(
             value instanceof Boolean
-                ? f.label + " · " + ((Boolean) value ? "是" : "否")
+                ? f.label + " · " + ((Boolean) value ? tr("是") : tr("否"))
                 : String.valueOf(value));
         if (details.size() >= 2) break;
       }
@@ -245,7 +247,7 @@ final class RuntimeRenderer {
     boolean hasMetric = !spec.metricField().isEmpty();
     card.addView(
         ui.text(
-            hasMetric ? spec.field(spec.metricField()).label + "累计" : "已留下的记录",
+            hasMetric ? spec.field(spec.metricField()).label + tr("累计") : tr("已留下的记录"),
             13,
             0xffc0d3c1,
             false));
@@ -259,12 +261,12 @@ final class RuntimeRenderer {
             Color.WHITE,
             true));
     ui.gap(total, 8);
-    TextView unit = ui.text(hasMetric ? spec.unit() : "条", 15, Ui.LIME, false);
+    TextView unit = ui.text(hasMetric ? spec.unit() : tr("条"), 15, Ui.LIME, false);
     unit.setPadding(0, 0, 0, ui.dp(7));
     total.addView(unit);
     card.addView(total);
     ui.space(card, 17);
-    card.addView(ui.text("每一次记录，都算数。", 11, 0xffb4c9b9, false));
+    card.addView(ui.text(tr("每一次记录，都算数。"), 11, 0xffb4c9b9, false));
     b.addView(card);
     long recent =
         entries.stream()
@@ -273,7 +275,7 @@ final class RuntimeRenderer {
     LinearLayout numbers = ui.row();
     for (int i = 0; i < 2; i++) {
       LinearLayout tile = ui.card();
-      tile.addView(ui.text(i == 0 ? "全部记录" : "近 7 天新增", 12, Ui.MUTED, false));
+      tile.addView(ui.text(i == 0 ? tr("全部记录") : tr("近 7 天新增"), 12, Ui.MUTED, false));
       ui.space(tile, 10);
       tile.addView(ui.text(String.valueOf(i == 0 ? entries.size() : recent), 26, Ui.INK, true));
       LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, -2, 1);
@@ -289,7 +291,7 @@ final class RuntimeRenderer {
         break;
       }
     if (choice != null) {
-      section(b, choice.label + "分布", "看看记录都落在了哪里。");
+      section(b, choice.label + tr("分布"), tr("看看记录都落在了哪里。"));
       LinearLayout groups = ui.card();
       int color = Color.parseColor(spec.accent());
       for (String option : choice.options) {
@@ -297,7 +299,7 @@ final class RuntimeRenderer {
         for (Store.Entry e : entries) if (option.equals(effective(choice, e.data))) count++;
         LinearLayout label = ui.row();
         label.addView(ui.text(option, 13, Ui.INK, false), new LinearLayout.LayoutParams(0, -2, 1));
-        label.addView(ui.text(count + " 条", 12, Ui.MUTED, false));
+        label.addView(ui.text(count + tr(" 条"), 12, Ui.MUTED, false));
         groups.addView(label);
         ui.space(groups, 8);
         LinearLayout track = ui.row();

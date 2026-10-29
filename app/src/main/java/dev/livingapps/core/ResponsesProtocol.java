@@ -1,5 +1,7 @@
 package dev.livingapps.core;
 
+import static dev.livingapps.core.Messages.tr;
+
 import java.net.URI;
 import java.util.*;
 import org.json.*;
@@ -15,18 +17,17 @@ public final class ResponsesProtocol {
       boolean https = "https".equalsIgnoreCase(uri.getScheme());
       boolean allowedHttp =
           "http".equalsIgnoreCase(uri.getScheme())
-              && Arrays.asList("localhost", "127.0.0.1", "10.0.2.2")
-                  .contains(uri.getHost());
+              && Arrays.asList("localhost", "127.0.0.1", "10.0.2.2").contains(uri.getHost());
       if (!https && !allowedHttp) throw new IllegalArgumentException();
       return base.trim().replaceAll("/+$", "");
     } catch (Exception e) {
-      throw new IllegalArgumentException("请配置 HTTPS API 地址；HTTP 仅限本机开发，地址不能包含账号、查询串或片段");
+      throw new IllegalArgumentException(tr("请配置 HTTPS API 地址；HTTP 仅限本机开发，地址不能包含账号、查询串或片段"));
     }
   }
 
   public static JSONObject request(String model, String instructions, String input) {
     if (model.trim().isEmpty() || model.length() > 120)
-      throw new IllegalArgumentException("模型名称无效");
+      throw new IllegalArgumentException(tr("模型名称无效"));
     return J.obj(
         "model",
         model,
@@ -48,7 +49,7 @@ public final class ResponsesProtocol {
     JSONObject json = J.parse(response);
     if (json.has("error")
         || Arrays.asList("failed", "incomplete", "cancelled").contains(json.optString("status")))
-      throw new IllegalArgumentException("模型未完整返回结果，请重试；当前应用没有改变");
+      throw new IllegalArgumentException(tr("模型未完整返回结果，请重试；当前应用没有改变"));
     StringBuilder text = new StringBuilder();
     JSONArray output = json.optJSONArray("output");
     if (output != null)
@@ -65,7 +66,7 @@ public final class ResponsesProtocol {
       }
     if (text.length() == 0) text.append(json.optString("output_text"));
     if (text.length() == 0 || text.length() > 64000)
-      throw new IllegalArgumentException("模型返回内容为空或过大");
+      throw new IllegalArgumentException(tr("模型返回内容为空或过大"));
     return text.toString();
   }
 
@@ -81,10 +82,11 @@ public final class ResponsesProtocol {
 
   public static Generated generated(String text) {
     JSONObject envelope = J.parse(J.cleanJson(text));
-    if (envelope.has("error")) throw new IllegalArgumentException("该需求超出当前记录、表单与统计运行时的能力，请缩小范围");
+    if (envelope.has("error"))
+      throw new IllegalArgumentException(tr("该需求超出当前记录、表单与统计运行时的能力，请缩小范围"));
     JSONObject spec = envelope.optJSONObject("app");
-    if (spec == null) throw new IllegalArgumentException("模型没有返回 app 描述");
+    if (spec == null) throw new IllegalArgumentException(tr("模型没有返回 app 描述"));
     return new Generated(
-        AppSpec.parse(spec.toString()), envelope.optString("explanation", "已生成修改，请预览后采用。"));
+        AppSpec.parse(spec.toString()), envelope.optString("explanation", tr("已生成修改，请预览后采用。")));
   }
 }
