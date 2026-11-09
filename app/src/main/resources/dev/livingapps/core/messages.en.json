@@ -863,6 +863,7 @@
   "·转换前副本": " · Pre-conversion copy",
   "未能创建恢复副本": "Could not create the restored copy",
   "备份不能超过 5 MB": "A backup cannot exceed 5 MB",
+  "备份最多包含 50 个应用": "A backup can contain up to 50 apps",
   "不支持的备份格式": "Unsupported backup format",
   "备份应用损坏": "The app in the backup is damaged",
   "记录数量超出限制": "Record count exceeds the limit",

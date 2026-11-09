@@ -47,8 +47,8 @@ public final class ResponsesProtocol {
 
   public static String outputText(String response) {
     JSONObject json = J.parse(response);
-    if (json.has("error")
-        || Arrays.asList("failed", "incomplete", "cancelled").contains(json.optString("status")))
+    if (!json.isNull("error")
+        || (!json.isNull("status") && !"completed".equals(json.opt("status"))))
       throw new IllegalArgumentException(tr("模型未完整返回结果，请重试；当前应用没有改变"));
     StringBuilder text = new StringBuilder();
     JSONArray output = json.optJSONArray("output");

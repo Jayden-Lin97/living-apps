@@ -56,6 +56,42 @@ public class MigrationRuntimeTest {
   }
 
   @Test
+  public void restoringALongNameInEnglishKeepsAValidNameAndOriginalData() {
+    String name = "A".repeat(17) + "\ud83c\udf31" + "B".repeat(21);
+    AppSpec named = store.app(id).spec.with("name", name);
+    version = store.apply(id, version, named, "test", "local", false);
+    store.commitMigration(
+        store.prepareMigration(id, version, MigrationPlan.scale(named, "amount", 100, "分")));
+
+    Locale previous = Locale.getDefault();
+    try {
+      Locale.setDefault(Locale.ENGLISH);
+      String copy = store.recoverMigrationCopy(id, store.migrationBackups(id).get(0).id);
+      assertEquals("A".repeat(17) + " · Pre-conversion copy", store.app(copy).spec.name());
+      assertEquals(12.5, store.records(copy).get(0).data.optDouble("amount"), 0);
+      assertEquals(name, store.app(id).spec.name());
+      assertEquals(1250, store.records(id).get(0).data.optInt("amount"));
+    } finally {
+      Locale.setDefault(previous);
+    }
+  }
+
+  @Test
+  @Config(sdk = {26, 35})
+  public void migrationBackupWithLargeChinesePayloadCanBeRecovered() {
+    JSONObject large = row("字".repeat(4000), 12.5);
+    for (int i = 0; i < 200; i++) store.saveRecord(id, version, null, large);
+    store.commitMigration(
+        store.prepareMigration(
+            id, version, MigrationPlan.scale(store.app(id).spec, "amount", 100, "分")));
+
+    String copy = store.recoverMigrationCopy(id, store.migrationBackups(id).get(0).id);
+    assertEquals(201, store.records(copy).size());
+    assertEquals(12.5, store.records(copy).get(0).data.optDouble("amount"), 0);
+    assertEquals(1250, store.records(id).get(0).data.optInt("amount"));
+  }
+
+  @Test
   public void changedDataAfterDryRunBlocksCommit() {
     Store.PreparedMigration prepared =
         store.prepareMigration(

@@ -70,3 +70,20 @@ RebuildEntryDeviceTest 仅编译，未执行。服务窗口和应用包是宿主
 ## 运行界面调整验证（2026-10-29）
 
 新版运行界面通过 116 项离线单元/框架测试、Android Lint 及两类 APK 构建。新增导航检查验证：打开选项不派发原应用动作，返回键先收起面板再结束会话。原生渲染覆盖中英文、明暗外观，以及 320 dp / 1.3 倍字体。未连接设备，设备测试仅编译、未执行。未调用付费 API。现有 v0.3.1 Release 附件保持不变；这些检查针对当前源码修订。
+
+## 试用前扩大验证（2026-11-09）
+
+从 116 项通过的基线出发，追加容易漏掉的网络协议、中文备份容量、英文长名称和旧系统兼容场景。先运行复现用例，再修复，最后重跑整套验证。六个用例在对应修复前失败，修复后通过。
+
+| 遇到的问题 | 根因 | 修复与复验 |
+|---|---|---|
+| 模型已返回候选，界面仍提示未完成。有部分文本的排队响应却可能进入后续解析 | 旧代码检查 `error` 字段是否存在，未区分 JSON `null`。状态只拦截部分已知失败值 | `error` 必须为空。明确给出状态时必须为 `completed`。兼容省略状态的网关。用本机 HTTP 夹具验证成功候选、请求 `store:false` 和指定模型，以及限流正文不外显、重定向不跟随。 |
+| 超过 5 MB 的中文备份或含 51 个应用的备份可以导出，却无法导入 | 导入限制文件字节数和应用数，导出没有同样的校验。中文字的 UTF-8 字节数也可能明显多于字符串长度 | 导出与导入共享数量和记录结构限制。导出逐行检查容量，完整文件按 UTF-8 字节计数，并在打开输出流前完成校验。流关闭成功后才提示导出成功。使用 425 条长中文记录和 51 个应用验证超限拒绝，数据和当前版本仍保留。 |
+| 在英文界面恢复长名称应用的转换前副本失败 | 固定保留 34 个字符，未预留英文后缀的长度，拼接后超过 AppSpec 的 40 个 UTF-16 代码单元限制 | 根据当前语言的后缀计算可保留的原名长度，避免截断表情字符的代理对。验证原应用仍保留转换后的记录，独立副本恢复转换前的记录。 |
+| 约 2.4 MB 的中文转换备份在提交时触发 `SQLiteBlobTooBigException` | 校验通过 `CursorWindow` 读取包含整份备份的一行，其单行容量低于应用设定的备份上限 | 用 `SQLiteStatement.simpleQueryForString()` 读取大字段，继续在同一事务中校验摘要。用 201 条记录在 API 26 和 35 上验证可提交、可恢复，损坏备份仍被拒绝。新建转换备份按 UTF-8 字节校验，已有快照保留原有恢复入口。 |
+
+接口契约参考 [OpenAI Docs 的 Responses 对象示例](https://developers.openai.com/api/reference/python/resources/beta/subresources/responses/methods/retrieve)。备份实现参考 [Android SQLite 事务文档](https://developer.android.com/reference/android/database/sqlite/SQLiteDatabase#beginTransactionNonExclusive())、[AOSP Android 15 的 SQLiteStatement 实现](https://github.com/aosp-mirror/platform_frameworks_base/blob/android-15.0.0_r1/core/java/android/database/sqlite/SQLiteStatement.java) 和 [Android 系统文件选择文档](https://developer.android.com/training/data-storage/shared/documents-files)。继续使用现有 Android 平台接口与测试依赖。
+
+本机 HTTP 夹具最初使用 `jdk.httpserver`，Android 单元测试编译时的 Java 系统模块镜像不包含该模块。改用只监听环回地址的标准 `ServerSocket`，仍通过实际 HTTP 请求验证传输行为。没有请求真实模型服务。
+
+最终通过 **128 项单元、Android 框架和环回 HTTP 测试**，失败、错误和跳过均为零。框架覆盖 API 26、29、32、33、35，SQLite 的恢复、备份往返和导入回滚跨 API 26、29、35 验证。Android Lint 零错误、三项既有警告。开发 APK 与设备测试 APK 均构建成功。当前没有可用的 Android 设备，设备测试只完成编译。实际安装与覆盖升级、系统文件选择、真实原应用无障碍会话、设备密钥库和后台调度仍需设备验收。

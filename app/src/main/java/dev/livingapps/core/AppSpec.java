@@ -49,6 +49,8 @@ public final class AppSpec {
     this.fields = Collections.unmodifiableList(new ArrayList<>(fields));
   }
 
+  public static final int MAX_NAME_LENGTH = 40;
+
   public static AppSpec parse(String text) {
     if (text == null || text.length() > 64000) throw new IllegalArgumentException(tr("应用描述过大或为空"));
     try {
@@ -60,7 +62,7 @@ public final class AppSpec {
         throw new IllegalArgumentException(tr("暂不支持该应用协议版本"));
       boolean extended = ((Number) protocolVersion).doubleValue() == 2.0;
       checkKeys(json, extended ? V2_ROOT_KEYS : ROOT_KEYS);
-      requireString(json, "name", 1, 40);
+      requireString(json, "name", 1, MAX_NAME_LENGTH);
       requireString(json, "description", 0, 240);
       requireString(json, "icon", 1, 12);
       if (!requireString(json, "accent", 7, 7).matches("#[0-9a-fA-F]{6}"))

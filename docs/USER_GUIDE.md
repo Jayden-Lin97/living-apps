@@ -66,7 +66,7 @@ AI deeper analysis is initiated by the user and includes only the definition and
 
 Settings exports plaintext JSON containing current app definitions, records and frozen status, excluding keys, events, historical versions, drafts, trial data and pre-conversion backups. To export pre-conversion data, first create its app copy, then export a global backup. Choose a trusted save location.
 
-Import creates independent app copies rather than overwriting existing apps. Limits are 5 MB, 50 apps, 5,000 records per app and 20,000 total records. Invalid input rolls back the entire import.
+Import creates independent app copies rather than overwriting existing apps. Each imported or exported file can contain up to 5 MB measured in UTF-8 bytes, 50 apps, 5,000 records per app and 20,000 total records. Invalid input rolls back the entire import.
 
 ## Reconstruct an existing app
 

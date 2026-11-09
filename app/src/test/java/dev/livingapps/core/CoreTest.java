@@ -193,6 +193,8 @@ public class CoreTest {
         J.obj(
             "status",
             "completed",
+            "error",
+            JSONObject.NULL,
             "output",
             J.arr(
                 J.obj("type", "reasoning", "summary", J.arr()),
@@ -207,11 +209,20 @@ public class CoreTest {
   }
 
   @Test
-  public void incompleteOutputCannotBeUsed() {
+  public void unfinishedOrFailedOutputCannotBeUsed() {
+    for (String status :
+        Arrays.asList("incomplete", "queued", "in_progress", "failed", "cancelled")) {
+      rejected(
+          () ->
+              ResponsesProtocol.outputText(
+                  J.obj("status", status, "output_text", "{}").toString()));
+    }
     rejected(
         () ->
             ResponsesProtocol.outputText(
-                J.obj("status", "incomplete", "output_text", "{} ").toString()));
+                J.obj("status", "completed", "error", J.obj("code", "failed"), "output_text", "{}")
+                    .toString()));
+    assertEquals("{}", ResponsesProtocol.outputText(J.obj("output_text", "{}").toString()));
   }
 
   @Test

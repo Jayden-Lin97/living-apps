@@ -12,6 +12,11 @@ import java.util.*;
 import org.json.*;
 
 public final class Store extends SQLiteOpenHelper {
+  static final int MAX_BACKUP_BYTES = 5_000_000;
+  private static final int MAX_BACKUP_APPS = 50;
+  private static final int MAX_BACKUP_RECORDS_PER_APP = 5000;
+  private static final int MAX_BACKUP_RECORDS = 20000;
+
   public static final class App {
     public String id, versionId;
     public AppSpec spec;
@@ -693,10 +698,13 @@ public final class Store extends SQLiteOpenHelper {
   private String migrationSnapshot(String appId) {
     App app = app(appId);
     List<Entry> rows = records(appId);
-    if (rows.size() > 5000) throw new IllegalArgumentException(tr("转换暂限每应用 5000 条记录，请先导出并整理数据"));
+    if (rows.size() > MAX_BACKUP_RECORDS_PER_APP)
+      throw new IllegalArgumentException(tr("转换暂限每应用 5000 条记录，请先导出并整理数据"));
     JSONArray data = new JSONArray();
-    for (Entry entry : rows)
+    for (Entry entry : rows) {
+      validateBackupRecord(entry.data);
       data.put(J.obj("id", entry.id, "data", entry.data, "created", entry.created));
+    }
     String payload =
         J.obj(
                 "format",
@@ -706,7 +714,7 @@ public final class Store extends SQLiteOpenHelper {
                 "apps",
                 J.arr(J.obj("spec", app.spec.json(), "frozen", app.frozen, "records", data)))
             .toString();
-    if (payload.length() > 5_000_000)
+    if (payload.getBytes(StandardCharsets.UTF_8).length > MAX_BACKUP_BYTES)
       throw new IllegalArgumentException(tr("转换前备份超过 5 MB，请先导出并整理数据"));
     return payload;
   }
@@ -798,14 +806,20 @@ public final class Store extends SQLiteOpenHelper {
   }
 
   private String verifiedMigrationBackup(String appId, String backupId) {
+    SQLiteDatabase db = getReadableDatabase();
+    // Callers hold a transaction, so both reads see the same snapshot. A large payload can
+    // exceed CursorWindow capacity even though it fits within the backup size limit.
     try (Cursor cursor =
-        getReadableDatabase()
-            .rawQuery(
-                "SELECT payload,digest FROM migration_backups WHERE app_id=? AND id=?",
-                new String[] {appId, backupId})) {
+            db.rawQuery(
+                "SELECT digest FROM migration_backups WHERE app_id=? AND id=?",
+                new String[] {appId, backupId});
+        SQLiteStatement read =
+            db.compileStatement("SELECT payload FROM migration_backups WHERE app_id=? AND id=?")) {
       if (!cursor.moveToFirst()) throw new IllegalArgumentException(tr("找不到转换备份"));
-      String payload = cursor.getString(0);
-      if (!digest(payload).equals(cursor.getString(1)))
+      read.bindString(1, appId);
+      read.bindString(2, backupId);
+      String payload = read.simpleQueryForString();
+      if (!digest(payload).equals(cursor.getString(0)))
         throw new IllegalStateException(tr("转换备份校验失败，无法恢复副本"));
       return payload;
     }
@@ -838,7 +852,10 @@ public final class Store extends SQLiteOpenHelper {
       JSONObject app = backup.optJSONArray("apps").optJSONObject(0);
       JSONObject raw = app.optJSONObject("spec");
       String name = raw.optString("name");
-      J.put(raw, "name", name.substring(0, Math.min(name.length(), 34)) + tr("·转换前副本"));
+      String suffix = tr("·转换前副本");
+      int prefixEnd = Math.min(name.length(), AppSpec.MAX_NAME_LENGTH - suffix.length());
+      if (prefixEnd > 0 && Character.isHighSurrogate(name.charAt(prefixEnd - 1))) prefixEnd--;
+      J.put(raw, "name", name.substring(0, prefixEnd) + suffix);
       Set<String> oldIds = new HashSet<>();
       for (App existing : apps()) oldIds.add(existing.id);
       importBackup(backup.toString());
@@ -854,24 +871,67 @@ public final class Store extends SQLiteOpenHelper {
   }
 
   public String exportBackup() {
-    JSONArray apps = new JSONArray();
-    for (App app : apps()) {
-      JSONArray records = new JSONArray();
-      for (Entry entry : records(app.id))
-        records.put(J.obj("data", entry.data, "created", entry.created));
-      apps.put(J.obj("spec", app.spec.json(), "frozen", app.frozen, "records", records));
+    SQLiteDatabase db = getWritableDatabase();
+    db.beginTransactionNonExclusive();
+    try {
+      List<App> source = apps();
+      if (source.size() > MAX_BACKUP_APPS) throw new IllegalArgumentException(tr("备份最多包含 50 个应用"));
+      JSONArray exported = new JSONArray();
+      int recordCount = 0, recordBytes = 0;
+      for (App app : source) {
+        JSONArray rows = new JSONArray();
+        try (Cursor cursor =
+            db.rawQuery(
+                "SELECT data,created FROM records WHERE app_id=? ORDER BY created DESC,rowid DESC",
+                new String[] {app.id})) {
+          while (cursor.moveToNext()) {
+            if (rows.length() >= MAX_BACKUP_RECORDS_PER_APP || ++recordCount > MAX_BACKUP_RECORDS)
+              throw new IllegalArgumentException(tr("记录数量超出限制"));
+            JSONObject data = J.parse(cursor.getString(0));
+            validateBackupRecord(data);
+            JSONObject row = J.obj("data", data, "created", cursor.getLong(1));
+            recordBytes += row.toString().getBytes(StandardCharsets.UTF_8).length;
+            if (recordBytes > MAX_BACKUP_BYTES)
+              throw new IllegalArgumentException(tr("备份不能超过 5 MB"));
+            rows.put(row);
+          }
+        }
+        exported.put(J.obj("spec", app.spec.json(), "frozen", app.frozen, "records", rows));
+      }
+      String text =
+          J.obj("format", "living-apps-backup", "version", 1, "apps", exported).toString();
+      if (text.getBytes(StandardCharsets.UTF_8).length > MAX_BACKUP_BYTES)
+        throw new IllegalArgumentException(tr("备份不能超过 5 MB"));
+      db.setTransactionSuccessful();
+      return text;
+    } finally {
+      db.endTransaction();
     }
-    return J.obj("format", "living-apps-backup", "version", 1, "apps", apps).toString();
+  }
+
+  private static void validateBackupRecord(JSONObject data) {
+    if (data == null || data.length() > 100 || data.toString().length() > 100000)
+      throw new IllegalArgumentException(tr("备份记录无效"));
+    Iterator<String> keys = data.keys();
+    while (keys.hasNext()) {
+      Object value = data.opt(keys.next());
+      if (value instanceof JSONObject
+          || value instanceof JSONArray
+          || value instanceof String && ((String) value).length() > 4000)
+        throw new IllegalArgumentException(tr("备份记录包含不支持的数据"));
+    }
   }
 
   public int importBackup(String text) {
-    if (text.length() > 5_000_000) throw new IllegalArgumentException(tr("备份不能超过 5 MB"));
+    // File import caps UTF-8 bytes before decoding. Keep the old character bound for local
+    // migration snapshots, which may have been stored by a previous version.
+    if (text.length() > MAX_BACKUP_BYTES) throw new IllegalArgumentException(tr("备份不能超过 5 MB"));
     JSONObject root = J.parse(text);
     JSONArray array = root.optJSONArray("apps");
     if (!root.optString("format").equals("living-apps-backup")
         || root.optInt("version") != 1
         || array == null
-        || array.length() > 50) throw new IllegalArgumentException(tr("不支持的备份格式"));
+        || array.length() > MAX_BACKUP_APPS) throw new IllegalArgumentException(tr("不支持的备份格式"));
     SQLiteDatabase db = getWritableDatabase();
     db.beginTransaction();
     try {
@@ -884,23 +944,13 @@ public final class Store extends SQLiteOpenHelper {
         String appId = create(spec, "import");
         freeze(appId, raw.optBoolean("frozen"));
         JSONArray records = raw.optJSONArray("records");
-        if (records == null || records.length() > 5000)
+        if (records == null || records.length() > MAX_BACKUP_RECORDS_PER_APP)
           throw new IllegalArgumentException(tr("记录数量超出限制"));
         for (int k = 0; k < records.length(); k++) {
           JSONObject row = records.optJSONObject(k),
               data = row == null ? null : row.optJSONObject("data");
-          if (data == null
-              || data.length() > 100
-              || data.toString().length() > 100000
-              || ++total > 20000) throw new IllegalArgumentException(tr("备份记录无效"));
-          Iterator<String> keys = data.keys();
-          while (keys.hasNext()) {
-            Object value = data.opt(keys.next());
-            if (value instanceof JSONObject
-                || value instanceof JSONArray
-                || value instanceof String && ((String) value).length() > 4000)
-              throw new IllegalArgumentException(tr("备份记录包含不支持的数据"));
-          }
+          if (++total > MAX_BACKUP_RECORDS) throw new IllegalArgumentException(tr("记录数量超出限制"));
+          validateBackupRecord(data);
           ContentValues values = new ContentValues();
           values.put("id", id());
           values.put("app_id", appId);

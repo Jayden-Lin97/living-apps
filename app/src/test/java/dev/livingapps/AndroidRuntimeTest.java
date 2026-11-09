@@ -41,6 +41,7 @@ public class AndroidRuntimeTest {
   }
 
   @Test
+  @Config(sdk = {26, 29, 35})
   public void realSqlitePreservesRecordsAcrossEditRestoreAndReopen() {
     AppSpec initial = Templates.all().get(0);
     String id = store.create(initial, "test");
@@ -60,9 +61,13 @@ public class AndroidRuntimeTest {
     assertEquals("重要内容", store.records(id).get(0).data.optString("note"));
     assertEquals(3, store.versions(id).size());
     assertEquals(23.5, store.records(id).get(0).data.optDouble("amount"), 0.001);
+    assertEquals(1, store.importBackup(store.exportBackup()));
+    Store.App copy = store.apps().stream().filter(app -> !app.id.equals(id)).findFirst().get();
+    assertEquals("重要内容", store.records(copy.id).get(0).data.optString("note"));
   }
 
   @Test
+  @Config(sdk = {26, 29, 35})
   public void importIsAtomicAndBackupDoesNotContainEvents() {
     String id = store.create(Templates.all().get(0), "test");
     store.saveRecord(id, store.app(id).versionId, null, row());
@@ -82,6 +87,37 @@ public class AndroidRuntimeTest {
     } catch (IllegalArgumentException expected) {
     }
     assertEquals(count, store.apps().size());
+  }
+
+  @Test
+  public void exportRejectsMultibyteBackupAboveFileLimitWithoutChangingRecords() {
+    String id = store.create(Templates.all().get(0), "test");
+    String version = store.app(id).versionId;
+    JSONObject data = row();
+    J.put(data, "item", "字".repeat(4000));
+    for (int i = 0; i < 425; i++) store.saveRecord(id, version, null, data);
+
+    assertTrue(
+        assertThrows(IllegalArgumentException.class, store::exportBackup)
+            .getMessage()
+            .contains("5 MB"));
+    MigrationPlan scale = MigrationPlan.scale(store.app(id).spec, "amount", 100, "分");
+    assertTrue(
+        assertThrows(
+                IllegalArgumentException.class, () -> store.prepareMigration(id, version, scale))
+            .getMessage()
+            .contains("5 MB"));
+    assertEquals(version, store.app(id).versionId);
+    assertEquals(425, store.records(id).size());
+  }
+
+  @Test
+  public void exportRejectsMoreAppsThanCanBeImported() {
+    AppSpec spec = Templates.all().get(0);
+    for (int i = 0; i < 51; i++) store.create(spec, "test");
+
+    assertThrows(IllegalArgumentException.class, store::exportBackup);
+    assertEquals(51, store.apps().size());
   }
 
   @Test

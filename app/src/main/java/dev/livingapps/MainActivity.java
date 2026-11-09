@@ -1612,9 +1612,12 @@ public final class MainActivity extends LocalizedActivity {
     if (result != RESULT_OK || data == null || data.getData() == null) return;
     Uri uri = data.getData();
     if (code == EXPORT) {
-      try (OutputStream out = getContentResolver().openOutputStream(uri)) {
-        if (out == null) throw new IOException(tr("无法写入所选文件"));
-        out.write(store.exportBackup().getBytes(StandardCharsets.UTF_8));
+      try {
+        byte[] backup = store.exportBackup().getBytes(StandardCharsets.UTF_8);
+        try (OutputStream out = getContentResolver().openOutputStream(uri)) {
+          if (out == null) throw new IOException(tr("无法写入所选文件"));
+          out.write(backup);
+        }
         toast(tr("备份已导出，不含密钥"));
       } catch (Exception e) {
         fail(e);
@@ -1626,7 +1629,7 @@ public final class MainActivity extends LocalizedActivity {
         byte[] buffer = new byte[8192];
         int n;
         while ((n = in.read(buffer)) != -1) {
-          if (out.size() + n > 5_000_000) throw new IOException(tr("备份超过 5 MB"));
+          if (out.size() + n > Store.MAX_BACKUP_BYTES) throw new IOException(tr("备份超过 5 MB"));
           out.write(buffer, 0, n);
         }
         int count = store.importBackup(out.toString("UTF-8"));
